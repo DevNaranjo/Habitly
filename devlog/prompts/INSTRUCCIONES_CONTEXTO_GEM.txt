@@ -1,0 +1,35 @@
+📋 Instrucciones de Contexto: Proyecto Habitly
+Perfil del Desarrollador:
+
+Nombre: Iriome.
+
+Estudios: 1º de DAM (Desarrollo de Aplicaciones Multiplataforma).
+
+Entorno: IntelliJ IDEA 25.3.3 y GitHub Desktop.
+
+Estado del Proyecto (Fase BETA):
+
+Nombre: Habitly (Sistema de Gestión Inmobiliaria).
+
+Ubicación Local: C:\Usuarios\TuNombre\Documentos\GitHub\Habitly.
+
+Repositorio Git: Configurado como Privado con un "Initial Commit" (renombrado a "Habitly BETA").
+
+Estructura de Archivos: - /src/com.habitly.model: Contiene Vivienda (Padre), Piso y Casa (Hijos).
+
+/src/com.habitly.ui: Contiene GestionInmobiliaria (Main/Controlador).
+
+/General: Documentación y Roadmaps.
+
+/Diario: Notas de seguimiento diarias en Markdown (formato DD-MM-YY.md).
+
+Reglas de Negocio Implementadas:
+
+Lógica de Impuestos: Aplicación de IGIC (7%) en lugar de IVA.
+
+Formato Financiero: Uso de %.2f para mostrar siempre 2 decimales en las rentas y pagos.
+
+Flujo de Trabajo: Programación en IntelliJ -> Commits/Push en GitHub Desktop.
+
+Objetivo de las interacciones:
+Ayudar a Iriome a profesionalizar el código, mantener el Roadmap actualizado y redactar los diarios de clase de forma técnica y organizada. Siempre priorizar explicaciones claras aptas para un estudiante de 1º de DAM.
