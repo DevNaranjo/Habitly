@@ -1,21 +1,24 @@
 package com.habitly.ui;
 
+import com.habitly.data.GestorInventario;
 import com.habitly.model.*;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
  * Clase principal que gestiona la interfaz de usuario de Habitly.
  * @author DevNaranjo
- * @version BETA
+ * @version V1.0
  * @since 29-03-26
  */
 public class GestionInmobiliaria {
 
     private static Scanner sc = new Scanner(System.in);
-    private static ArrayList<Vivienda> inventario = new ArrayList<>();
+    private static GestorInventario gestor = new GestorInventario();
 
     public static void main(String[] args) {
+        // Cargamos datos al iniciar el sistema
+        gestor.cargarDatos();
+
         int opcion = 0;
         do {
             mostrarMenu();
@@ -30,7 +33,10 @@ public class GestionInmobiliaria {
                 default -> System.out.println("Opción no válida (1-5).");
             }
         } while (opcion != 5);
+
         sc.close();
+        // Guardado final de seguridad al salir
+        gestor.guardarDatos();
     }
 
     // --- MÉTODOS DE GESTIÓN ---
@@ -64,23 +70,27 @@ public class GestionInmobiliaria {
             int planta = leerEntero("Indique la planta: ");
             System.out.print("¿Cuál es la puerta? ");
             String puerta = sc.nextLine();
-            inventario.add(new Piso(direccion, precioBase, planta, puerta));
+            // Usamos el gestor para añadir el nuevo Piso
+            gestor.añadirVivienda(new Piso(direccion, precioBase, planta, puerta));
+            gestor.guardarDatos();
         } else {
             // Si sale del bucle y no es 1, obligatoriamente es 2
             double metros = leerDouble("¿Metros de la parcela? ");
-            inventario.add(new Casa(direccion, precioBase, metros));
+            // Usamos el gestor para añadir la nueva Casa
+            gestor.añadirVivienda(new Casa(direccion, precioBase, metros));
+            gestor.guardarDatos();
         }
         System.out.println("Vivienda registrada con éxito.");
     }
 
     private static void listarInventario() {
-        if (inventario.isEmpty()) {
+        if (gestor.estaVacio()) {
             System.out.println("El inventario está vacío.");
             return;
         }
         System.out.println("\n--- LISTADO DE VIVIENDAS ---");
-        for (int i = 0; i < inventario.size(); i++) {
-            Vivienda v = inventario.get(i);
+        for (int i = 0; i < gestor.tamañoInventario(); i++) {
+            Vivienda v = gestor.obtenerVivienda(i);
 
             String etiquetaTipo = "Vivienda";
             if (v instanceof Piso) {
@@ -89,23 +99,24 @@ public class GestionInmobiliaria {
                 etiquetaTipo = "Casa";
             }
 
-            //Resultado: Índice. [Tipo] Dirección | Precio: XX.XX € (Pendiente (IGIC inc.): XX.XX €)
-            System.out.printf("%d. [%s] %s | Base: %.2f € | Pendiente (IGIC inc.): %.2f €%n",
-                    (i + 1), etiquetaTipo, v.getDireccion(), v.getPrecioBase(), v.getPendienteDePago());
+            // Resultado: Índice. [Estado] [Tipo] Dirección | Base: XX.XX € | Pendiente (IGIC inc.): XX.XX €
+            System.out.printf("%d. [%s] [%s] %s | Base: %.2f € | Pendiente (IGIC inc.): %.2f €%n",
+                    (i + 1), v.getEstado(), etiquetaTipo, v.getDireccion(), v.getPrecioBase(), v.getPendienteDePago());
         }
     }
 
     private static void gestionarPago() {
-        if (inventario.isEmpty()) {
+        if (gestor.estaVacio()) {
             System.out.println("No hay viviendas registradas para realizar cobros.");
             return;
         }
 
+        // Mostramos primero el inventario para que el usuario pueda ver las pendiente de pago
         listarInventario();
         int indice = leerEntero("Seleccione el número de vivienda para el pago: ") - 1;
 
-        if (indice >= 0 && indice < inventario.size()) {
-            Vivienda elegida = inventario.get(indice);
+        if (indice >= 0 && indice < gestor.tamañoInventario()) {
+            Vivienda elegida = gestor.obtenerVivienda(indice);
             System.out.println("Vivienda seleccionada: " + elegida.getDireccion());
             System.out.printf("Pendiente actual: %.2f €%n", elegida.getPendienteDePago());
 
@@ -118,26 +129,30 @@ public class GestionInmobiliaria {
             } else {
                 System.out.printf("Pendiente restante: %.2f €%n", elegida.getPendienteDePago());
             }
+            // Guardamos el pago realizado
+            gestor.guardarDatos();
         } else {
             System.out.println("Error: Índice de vivienda no válido.");
         }
     }
 
     private static void aplicarIPCGeneral() {
-        if (inventario.isEmpty()) {
+        if (gestor.estaVacio()) {
             System.out.println("No hay viviendas para actualizar.");
             return;
         }
 
         double porcentaje = leerDouble("Introduzca el porcentaje de incremento (IPC): ");
-        for (Vivienda v : inventario) {
-            v.aplicarSubidaAnual(porcentaje);
+        // Recorremos el inventario a través del gestor
+        for (int i = 0; i < gestor.tamañoInventario(); i++) {
+            gestor.obtenerVivienda(i).aplicarSubidaAnual(porcentaje);
         }
+        // Guardamos el incremento ya aplicado en todas las viviendas
+        gestor.guardarDatos();
         System.out.println("Precios actualizados en todo el inventario.");
     }
 
     // --- UTILIDADES DE ENTRADA ---
-
     private static int leerEntero(String mensaje) {
         while (true) {
             try {
@@ -152,16 +167,30 @@ public class GestionInmobiliaria {
         }
     }
 
+    /**
+     * Utilidad para leer números decimales de forma segura.
+     * Valida que el dato sea numérico y que sea un valor positivo coherente para el negocio.
+     * * @param mensaje Texto que se muestra al usuario pidiendo el dato.
+     * @return double Valor validado mayor que cero.
+     */
     private static double leerDouble(String mensaje) {
         while (true) {
             try {
                 System.out.print(mensaje);
                 double valor = sc.nextDouble();
-                sc.nextLine();
+                sc.nextLine(); // Limpiar el buffer
+
+                // --- VALIDACIÓN DE NEGOCIO v1.0 ---
+                if (valor <= 0) {
+                    System.out.println("Error: El valor debe ser mayor que 0. Inténtelo de nuevo.");
+                    continue; // Vuelve al principio del bucle sin salir
+                }
+
                 return valor;
+
             } catch (Exception e) {
                 System.out.println("Error: Introduzca un valor numérico (use coma para decimales).");
-                sc.nextLine();
+                sc.nextLine(); // Limpiar el buffer en caso de error de tipo
             }
         }
     }

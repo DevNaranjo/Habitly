@@ -1,13 +1,16 @@
 package com.habitly.model;
 
+import java.io.Serializable;
+
 /**
  * Representa una vivienda de tipo Piso dentro de un régimen de propiedad horizontal.
  * Hereda de la clase Vivienda los atributos de ubicación y precio.
  *
  * @author Iriome
- * @version 1.0 (2026)
+ * @version 1.0
+ * @since 29-03-26
  */
-public class Piso extends Vivienda
+public class Piso extends Vivienda implements Serializable
 {
     // Atributos específicos del tipo Piso
     private int planta;
@@ -28,6 +31,18 @@ public class Piso extends Vivienda
         super(direccion, precioBase);
         this.planta = planta;
         this.puerta = puerta;
+    }
+
+    // --- Lógica de Negocio (obligatorio) ---
+
+    /**
+     * Calcula el precio final de la mensualidad del piso aplicando el IGIC.
+     * @return double con el precio final (Base + 7% IGIC).
+     */
+    @Override
+    public double getPrecioFinalConImpuestos() {
+        // Aplicamos el 7% de IGIC sobre el precio base (temporalmente mientras se aplique el contexto "Canarias-Only").
+        return getPrecioBase() * 1.07;
     }
 
     /**

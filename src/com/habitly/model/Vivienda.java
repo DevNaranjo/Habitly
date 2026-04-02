@@ -1,154 +1,85 @@
 package com.habitly.model;
 
-/**
- * La clase Vivienda representa un inmueble genérico en alquiler dentro del sistema.
- * Centraliza la gestión de la ubicación, el precio base y la normativa fiscal (IGIC).
- * Sirve como superclase para tipos de vivienda más específicos como Piso o Casa.
- * * @author DevNaranjo
- * @version BETA
- * @since 29-03-26
- */
-public class Vivienda
-{
-    /**
-     * Tasa del Impuesto General Indirecto Canario aplicable (7.0%).
-     */
-    private static final double IGIC = 7.0;
+import java.io.Serializable;
 
-    //Atributos específicos para la clase
+/**
+ * Clase abstracta que representa la base de cualquier vivienda en Habitly.
+ * Implementa Serializable para permitir la persistencia de datos.
+ */
+public abstract class Vivienda implements Serializable {
     private String direccion;
     private double precioBase;
-
-    //Atributos de control
-    private double mensualidadTotal;
-    private double totalPagadoMes;
+    protected double totalPagadoMes;
+    private EstadoVivienda estado;
 
     /**
-     * Constructor principal para la clase Vivienda.
-     * * @param direccion La ubicación física completa del inmueble.
-     * @param precioBase El importe mensual del alquiler antes de impuestos.
+     * Constructor para inicializar una vivienda con dirección y precio.
+     * Por defecto, la vivienda nace en estado DISPONIBLE.
      */
-    public Vivienda(String direccion, double precioBase)
-    {
+    public Vivienda(String direccion, double precioBase) {
         this.direccion = direccion;
         this.precioBase = precioBase;
-
-        this.mensualidadTotal = getPrecioConImpuestos();
         this.totalPagadoMes = 0;
+        this.estado = EstadoVivienda.DISPONIBLE;
     }
 
-    // --- Getters ---
+    // --- GETTERS Y SETTERS ---
+    public String getDireccion() { return direccion; }
 
-    /**
-     * Obtiene la dirección registrada de la vivienda.
-     * * @return String con la dirección del inmueble.
-     */
-    public String getDireccion()
-    {
-        return direccion;
-    }
+    public double getPrecioBase() { return precioBase; }
 
-    /**
-     * Obtiene el precio base mensual actual (neto).
-     * * @return double con el precio base sin impuestos.
-     */
-    public double getPrecioBase()
-    {
-        return precioBase;
-    }
+    public EstadoVivienda getEstado() { return estado; }
 
-    // --- Setters ---
-
-    /**
-     * Actualiza la dirección física de la propiedad.
-     * * @param nuevaDireccion La nueva dirección a asignar.
-     */
-    public void setDireccion(String nuevaDireccion)
-    {
-        this.direccion = nuevaDireccion;
-    }
-
-    /**
-     * Modifica el precio base del alquiler.
-     * * @param nuevoPrecioBase El nuevo importe neto mensual.
-     */
-    public void setPrecioBase(double nuevoPrecioBase)
-    {
-        this.precioBase = nuevoPrecioBase;
-        this.mensualidadTotal = getPrecioConImpuestos();
-    }
-
-    // --- Métodos lógica financiera ---
-
-    /**
-     * Calcula el importe total de la mensualidad aplicando el gravamen
-     * correspondiente al IGIC (7.0%).
-     * * @return double con el precio final (precioBase + impuestos).
-     */
-    public double getPrecioConImpuestos()
-    {
-        return precioBase * (1 + IGIC / 100.0);
-    }
-
-    // --- Métodos gestión financiero ---
+    public void setEstado(EstadoVivienda estado) { this.estado = estado; }
 
     /**
      * Registra un ingreso de dinero para la mensualidad actual.
      * Incrementa el acumulador de pagos realizados por el inquilino.
-     * * @param cuota La cantidad de dinero (en euros) que se desea abonar.
+     * @param cuota La cantidad de dinero (en euros) que se desea abonar.
      */
-    public void registrarPago(double cuota)
-    {
-        totalPagadoMes += cuota;
-    }
-
-    /**
-     * Calcula la deuda restante del mes actual.
-     * * @return El importe pendiente (double) para cubrir la mensualidad total.
-     */
-    public double getPendienteDePago()
-    {
-        return mensualidadTotal - totalPagadoMes;
-    }
-
-    /**
-     * Determina si el inquilino ha cumplido con su obligación financiera.
-     * Valida tanto el pago exacto como los posibles sobrepagos.
-     * * @return true si el total pagado es mayor o igual a la mensualidad;
-     * false si aún existe saldo pendiente.
-     */
-    public boolean isPagadoCompleto()
-    {
-        return totalPagadoMes >= mensualidadTotal;
-    }
-
-    /**
-     * Calcula la proyección de la cantidad a ingresar en el futuro (máximo 1 año)
-     *
-     * @param meses El número de meses que se desea proyectar la cantidad.
-     * @return Devuelve la cantidad total de euros a ingresar en los meses pasados por
-     *         parámetro.
-     *         En caso de que los meses sean incorrectos, devolverá 0.0.
-     */
-    public double getProyeccionIngresos(int meses)
-    {
-        if (meses < 1 || meses > 12)
-        {
-            return 0.0;
+    public void registrarPago(double cuota) {
+        // Comprobar que la vivienda no esté vendida
+        if (this.estado == EstadoVivienda.VENDIDA) {
+            System.out.println("La vivienda está vendida. No se pueden registrar más pagos.");
+            return;
         }
+        //Si no está vendida realiza el pago
+        this.totalPagadoMes += cuota;
 
-        return mensualidadTotal * meses;
+        // Si se completa el pago, pasa a ser alquilada (temporal)
+        if (isPagadoCompleto() && this.estado == EstadoVivienda.DISPONIBLE) {
+            this.estado = EstadoVivienda.ALQUILADA;
+            System.out.println("SISTEMA: La vivienda ha pasado automáticamente a estado ALQUILADA.");
+        }
     }
 
     /**
-     * Aplica un incremento porcentual al precio base de la vivienda (IPC).
-     * * Este método actualiza el precioBase y, consecuentemente, recalcula
-     * la mensualidadTotal mediante el uso del setter.
-     * * @param porcentaje El valor porcentual a subir.
+     * Calcula el precio final aplicando los impuestos correspondientes (IGIC).
+     * @return El precio total con impuestos incluidos.
      */
-    public void aplicarSubidaAnual(double porcentaje)
-    {
-        double nuevoPrecio = precioBase + (precioBase * porcentaje / 100);
-        setPrecioBase(nuevoPrecio);
+    public abstract double getPrecioFinalConImpuestos();
+
+    /**
+     * Calcula la cantidad que aún queda por pagar para cubrir la mensualidad.
+     * @return Cantidad pendiente en euros.
+     */
+    public double getPendienteDePago() {
+        return getPrecioFinalConImpuestos() - totalPagadoMes;
+    }
+
+    /**
+     * Verifica si el total pagado cubre el precio con impuestos.
+     * @return true si ya no queda deuda.
+     */
+    public boolean isPagadoCompleto() {
+        return totalPagadoMes >= getPrecioFinalConImpuestos();
+    }
+
+    /**
+     * Aplica un incremento porcentual al precio base (IPC).
+     * @param porcentaje Valor del incremento (ej: 2.5 para un 2.5%).
+     */
+    public void aplicarSubidaAnual(double porcentaje) {
+        this.precioBase += (this.precioBase * porcentaje / 100);
     }
 }
