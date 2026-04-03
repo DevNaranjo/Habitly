@@ -4,11 +4,11 @@ import java.io.Serializable;
 
 /**
  * Representa una vivienda de tipo Piso dentro de un régimen de propiedad horizontal.
- * Hereda de la clase Vivienda los atributos de ubicación y precio.
+ * Hereda de la clase Vivienda los atributos de ubicación, precio y características físicas.
  *
  * @author Iriome
- * @version 1.0
- * @since 29-03-26
+ * @version 1.0.2
+ * @since 03-04-26
  */
 public class Piso extends Vivienda implements Serializable
 {
@@ -18,17 +18,23 @@ public class Piso extends Vivienda implements Serializable
 
     /**
      * Constructor para la clase Piso.
-     * Utiliza el mecanismo de herencia para inicializar los datos base.
+     * Utiliza el mecanismo de herencia para inicializar los datos base y técnicos.
      *
      * @param direccion Ubicación física del edificio.
      * @param precioBase Importe del alquiler sin impuestos.
+     * @param superficie Metros cuadrados útiles.
+     * @param habitaciones Número de dormitorios.
+     * @param baños Número de cuartos de baño.
+     * @param tieneGaraje Indica si incluye plaza de garaje.
+     * @param conservacion Descripción del estado físico (ej: "Reformado").
      * @param planta Nivel en la que se encuentra el piso.
      * @param puerta Identificador específico (ej: "A", "Izquierda", "1").
      */
-    public Piso(String direccion, double precioBase, int planta, String puerta)
+    public Piso(String direccion, double precioBase, double superficie, int habitaciones,
+                int baños, boolean tieneGaraje, String conservacion, int planta, String puerta)
     {
-        // Invocación al constructor de la superclase (Vivienda)
-        super(direccion, precioBase);
+        // Invocación al constructor actualizado de la superclase (Vivienda)
+        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, conservacion);
         this.planta = planta;
         this.puerta = puerta;
     }
@@ -41,7 +47,7 @@ public class Piso extends Vivienda implements Serializable
      */
     @Override
     public double getPrecioFinalConImpuestos() {
-        // Aplicamos el 7% de IGIC sobre el precio base (temporalmente mientras se aplique el contexto "Canarias-Only").
+        // Aplicamos el 7% de IGIC sobre el precio base.
         return getPrecioBase() * 1.07;
     }
 
@@ -82,6 +88,7 @@ public class Piso extends Vivienda implements Serializable
      */
     public void setPlanta(int nuevaPlanta)
     {
+        // El error estaba aquí: debe ser this.planta
         this.planta = nuevaPlanta;
     }
 }

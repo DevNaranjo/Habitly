@@ -4,10 +4,10 @@ import java.io.Serializable;
 
 /**
  * Representa una vivienda de tipo Casa o Unifamiliar.
- * Extiende la funcionalidad de Vivienda añadiendo información sobre el terreno.
+ * Extiende la funcionalidad de Vivienda añadiendo información sobre el terreno y características físicas.
  * @author DevNaranjo
- * @version V1.0
- * @since 29-03-26
+ * @version 1.0.2
+ * @since 03-04-26
  */
 public class Casa extends Vivienda implements Serializable
 {
@@ -16,14 +16,21 @@ public class Casa extends Vivienda implements Serializable
 
     /**
      * Constructor para la clase Casa.
-     * Delega la configuración de dirección y precio a la superclase.
-     * @param direccion Ubicación de la casa.
+     * Delega la configuración de datos base y técnicos a la superclase.
+     * * @param direccion Ubicación de la casa.
      * @param precioBase Mensualidad neta acordada.
+     * @param superficie Metros cuadrados construidos.
+     * @param habitaciones Número de dormitorios.
+     * @param baños Número de cuartos de baño.
+     * @param tieneGaraje Indica si incluye zona de aparcamiento.
+     * @param conservacion Descripción del estado físico (ej: "A reformar").
      * @param metrosParcela Superficie total del terreno en m².
      */
-    public Casa(String direccion, double precioBase, double metrosParcela)
+    public Casa(String direccion, double precioBase, double superficie, int habitaciones,
+                int baños, boolean tieneGaraje, String conservacion, double metrosParcela)
     {
-        super(direccion, precioBase);
+        // Invocación al constructor actualizado de Vivienda
+        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, conservacion);
         this.metrosParcela = metrosParcela;
     }
 
@@ -35,7 +42,7 @@ public class Casa extends Vivienda implements Serializable
      */
     @Override
     public double getPrecioFinalConImpuestos() {
-        // Aplicamos el 7% de IGIC sobre el precio base (temporalmente mientras se aplique el contexto "Canarias-Only").
+        // Aplicamos el 7% de IGIC sobre el precio base.
         return getPrecioBase() * 1.07;
     }
 

@@ -7,8 +7,8 @@ import java.util.Scanner;
 /**
  * Clase principal que gestiona la interfaz de usuario de Habitly.
  * @author DevNaranjo
- * @version V1.0.1A
- * @since 29-03-26
+ * @version V1.0.2 (Etapa 2 - Ampliación del Modelo)
+ * @since 03-04-26
  */
 public class GestionInmobiliaria {
 
@@ -16,93 +16,86 @@ public class GestionInmobiliaria {
     private static GestorInventario gestor = new GestorInventario();
 
     public static void main(String[] args) {
-        // Cargamos datos al iniciar el sistema (ahora desde ruta segura y con AES)
-        gestor.cargarDatos();
+        // Inicialización del sistema: Carga de datos cifrados con AES
+        try {
+            gestor.cargarDatos();
+        } catch (Exception e) {
+            System.out.println("Aviso: Error de compatibilidad al cargar datos previos.");
+            System.out.println("Se recomienda realizar un borrado de fábrica (Opción 6).");
+        }
 
         int opcion = 0;
         do {
             mostrarMenu();
-            opcion = leerEntero("Elija una opción: ");
+            opcion = leerEntero("Seleccione una operación (1-6): ");
 
             switch (opcion) {
                 case 1 -> registrarVivienda();
                 case 2 -> listarInventario();
                 case 3 -> gestionarPago();
                 case 4 -> aplicarIPCGeneral();
-                case 5 -> System.out.println("Saliendo del sistema de Gestión Inmobiliaria... ¡Hasta pronto!");
-                case 6 -> borrarDatosSistema(); // Nueva funcionalidad v1.0.1A
-                default -> System.out.println("Opción no válida (1-6).");
+                case 5 -> {
+                    System.out.println("Guardando cambios en el repositorio local cifrado...");
+                    gestor.guardarDatos();
+                    System.out.println("Sesión finalizada. ¡Hasta pronto!");
+                }
+                case 6 -> borrarDatosSistema();
+                default -> System.out.println("Error: Opción no válida.");
             }
         } while (opcion != 5);
 
         sc.close();
-        // Guardado final de seguridad al salir
-        gestor.guardarDatos();
     }
-
-    // --- MÉTODOS DE GESTIÓN ---
 
     private static void mostrarMenu() {
-        System.out.println("\n--- MENÚ GESTIÓN INMOBILIARIA ---");
-        System.out.println("1. Registrar Vivienda");
-        System.out.println("2. Listar Inventario");
-        System.out.println("3. Registrar Pago");
-        System.out.println("4. Aplicar IPC");
-        System.out.println("5. Salir");
-        System.out.println("6. Borrar datos de aplicación");
-    }
-
-    /**
-     * Gestiona el proceso de borrado físico y lógico de los datos de la aplicación.
-     * Incluye una confirmación explícita para evitar pérdidas accidentales.
-     */
-    private static void borrarDatosSistema() {
-        System.out.println("\nADVERTENCIA: Esta acción eliminará permanentemente todos los datos.");
-        System.out.print("¿Está seguro de que desea continuar? (Escriba 'SI' para confirmar): ");
-        String confirmacion = sc.nextLine().toUpperCase();
-
-        if (confirmacion.equals("SI")) {
-            if (gestor.borrarDatosAplicacion()) {
-                System.out.println("Todos los datos han sido eliminados correctamente del sistema.");
-            } else {
-                System.out.println("Error: No se pudo completar la eliminación de los archivos.");
-            }
-        } else {
-            System.out.println("Operación cancelada. Sus datos están a salvo.");
-        }
+        System.out.println("\n========================================");
+        System.out.println("    HABITLY - GESTIÓN INMOBILIARIA v1.0.2");
+        System.out.println("========================================");
+        System.out.println("1. Registrar nueva vivienda");
+        System.out.println("2. Consultar inventario y ratios (€/m²)");
+        System.out.println("3. Registrar cobro de mensualidad");
+        System.out.println("4. Actualización masiva de precios (IPC)");
+        System.out.println("5. Salir del programa");
+        System.out.println("6. Borrar datos (Reseteado de fábrica)");
+        System.out.println("----------------------------------------");
     }
 
     private static void registrarVivienda() {
-        System.out.println("\nUsted ha elegido: Registrar vivienda.");
-        System.out.print("¿Cuál es su dirección? ");
+        System.out.println("\n--- NUEVO REGISTRO DE VIVIENDA ---");
+
+        System.out.print("Dirección: ");
         String direccion = sc.nextLine();
 
-        double precioBase = leerDouble("¿Cuál es el precio base? ");
+        double precioBase = leerDouble("Precio base mensual (€): ");
+        double superficie = leerDouble("Superficie útil (m²): ");
+        int habitaciones = leerEntero("Número de habitaciones: ");
+        int baños = leerEntero("Número de baños: ");
+        boolean tieneGaraje = leerBoolean("¿Tiene garaje? (S/N): ");
 
-        // Bucle de validación específica para el tipo de vivienda
+        System.out.print("Estado de conservación (Nuevo/Reformado/A reformar): ");
+        String conservacion = sc.nextLine();
+
         int tipo;
         do {
             tipo = leerEntero("¿Es un Piso (1) o una Casa (2)? ");
-            if (tipo != 1 && tipo != 2) {
-                System.out.println("Error: Por favor, introduzca 1 para Piso o 2 para Casa.");
-            }
         } while (tipo != 1 && tipo != 2);
 
         if (tipo == 1) {
-            int planta = leerEntero("Indique la planta: ");
-            System.out.print("¿Cuál es la puerta? ");
+            int planta = leerEntero("Planta: ");
+            System.out.print("Puerta: ");
             String puerta = sc.nextLine();
-            // Usamos el gestor para añadir el nuevo Piso
-            gestor.añadirVivienda(new Piso(direccion, precioBase, planta, puerta));
-            gestor.guardarDatos();
+
+            gestor.añadirVivienda(new Piso(direccion, precioBase, superficie, habitaciones,
+                    baños, tieneGaraje, conservacion, planta, puerta));
         } else {
-            // Si sale del bucle y no es 1, obligatoriamente es 2
-            double metros = leerDouble("¿Metros de la parcela? ");
-            // Usamos el gestor para añadir la nueva Casa
-            gestor.añadirVivienda(new Casa(direccion, precioBase, metros));
-            gestor.guardarDatos();
+            double metrosParcela = leerDouble("Metros de parcela/terreno: ");
+
+            gestor.añadirVivienda(new Casa(direccion, precioBase, superficie, habitaciones,
+                    baños, tieneGaraje, conservacion, metrosParcela));
         }
-        System.out.println("Vivienda registrada con éxito.");
+
+        gestor.guardarDatos();
+        System.out.println("Registro completado y datos cifrados.");
     }
 
     private static void listarInventario() {
@@ -110,51 +103,39 @@ public class GestionInmobiliaria {
             System.out.println("El inventario está vacío.");
             return;
         }
-        System.out.println("\n--- LISTADO DE VIVIENDAS ---");
+        System.out.println("\n--- INVENTARIO DETALLADO ---");
         for (int i = 0; i < gestor.tamañoInventario(); i++) {
             Vivienda v = gestor.obtenerVivienda(i);
 
-            String etiquetaTipo = "Vivienda";
-            if (v instanceof Piso) {
-                etiquetaTipo = "Piso";
-            } else if (v instanceof Casa) {
-                etiquetaTipo = "Casa";
-            }
+            String tipo = (v instanceof Piso) ? "Piso" : "Casa";
+            String garaje = v.isTieneGaraje() ? "Con Garaje" : "Sin Garaje";
 
-            // Resultado: Índice. [Estado] [Tipo] Dirección | Base: XX.XX € | Pendiente (IGIC inc.): XX.XX €
-            System.out.printf("%d. [%s] [%s] %s | Base: %.2f € | Pendiente (IGIC inc.): %.2f €%n",
-                    (i + 1), v.getEstado(), etiquetaTipo, v.getDireccion(), v.getPrecioBase(), v.getPendienteDePago());
+            System.out.printf("%d. [%s] [%s] %s%n", (i + 1), v.getEstado(), tipo, v.getDireccion());
+            System.out.printf("   Detalles: %d hab, %d baños | %.1f m² | %s | %s%n",
+                    v.getHabitaciones(), v.getBaños(), v.getSuperficie(), v.getConservacion(), garaje);
+            System.out.printf("   Económico: Base: %.2f€ | Pendiente: %.2f€ | Ratio: %.2f€/m²%n",
+                    v.getPrecioBase(), v.getPendienteDePago(), v.getPrecioMetroCuadrado());
+            System.out.println("   --------------------------------------------------------");
         }
     }
 
     private static void gestionarPago() {
         if (gestor.estaVacio()) {
-            System.out.println("No hay viviendas registradas para realizar cobros.");
+            System.out.println("No hay viviendas registradas.");
             return;
         }
 
-        // Mostramos primero el inventario para que el usuario pueda ver las pendiente de pago
         listarInventario();
-        int indice = leerEntero("Seleccione el número de vivienda para el pago: ") - 1;
+        int indice = leerEntero("Seleccione el número de vivienda: ") - 1;
 
         if (indice >= 0 && indice < gestor.tamañoInventario()) {
             Vivienda elegida = gestor.obtenerVivienda(indice);
-            System.out.println("Vivienda seleccionada: " + elegida.getDireccion());
-            System.out.printf("Pendiente actual: %.2f €%n", elegida.getPendienteDePago());
-
-            double cuota = leerDouble("¿Cantidad a abonar? ");
+            double cuota = leerDouble("Cantidad a abonar (€): ");
             elegida.registrarPago(cuota);
-
-            System.out.println("Pago registrado satisfactoriamente.");
-            if (elegida.isPagadoCompleto()) {
-                System.out.println("¡Mensualidad completada!");
-            } else {
-                System.out.printf("Pendiente restante: %.2f €%n", elegida.getPendienteDePago());
-            }
-            // Guardamos el pago realizado
             gestor.guardarDatos();
+            System.out.println("Pago procesado.");
         } else {
-            System.out.println("Error: Índice de vivienda no válido.");
+            System.out.println("Error: Índice no válido.");
         }
     }
 
@@ -164,17 +145,41 @@ public class GestionInmobiliaria {
             return;
         }
 
-        double porcentaje = leerDouble("Introduzca el porcentaje de incremento (IPC): ");
-        // Recorremos el inventario a través del gestor
+        double porcentaje = leerDouble("Porcentaje de incremento (IPC): ");
         for (int i = 0; i < gestor.tamañoInventario(); i++) {
             gestor.obtenerVivienda(i).aplicarSubidaAnual(porcentaje);
         }
-        // Guardamos el incremento ya aplicado en todas las viviendas
         gestor.guardarDatos();
-        System.out.println("Precios actualizados en todo el inventario.");
+        System.out.println("Precios actualizados.");
+    }
+
+    private static void borrarDatosSistema() {
+        System.out.print("\n¿Confirmar borrado total? (Escriba 'SI'): ");
+        String confirmacion = sc.nextLine().toUpperCase();
+
+        if (confirmacion.equals("SI")) {
+            if (gestor.borrarDatosAplicacion()) {
+                System.out.println("Datos eliminados correctamente.");
+            } else {
+                System.out.println("Error al intentar borrar los archivos.");
+            }
+        } else {
+            System.out.println("Operación cancelada.");
+        }
     }
 
     // --- UTILIDADES DE ENTRADA ---
+
+    private static boolean leerBoolean(String mensaje) {
+        while (true) {
+            System.out.print(mensaje);
+            String input = sc.nextLine().trim().toUpperCase();
+            if (input.equals("S")) return true;
+            if (input.equals("N")) return false;
+            System.out.println("Error: Responda con 'S' o 'N'.");
+        }
+    }
+
     private static int leerEntero(String mensaje) {
         while (true) {
             try {
@@ -183,36 +188,26 @@ public class GestionInmobiliaria {
                 sc.nextLine();
                 return valor;
             } catch (Exception e) {
-                System.out.println("Error: Introduzca un número entero válido.");
+                System.out.println("Error: Introduzca un número entero.");
                 sc.nextLine();
             }
         }
     }
 
-    /**
-     * Utilidad para leer números decimales de forma segura.
-     * Valida que el dato sea numérico y que sea un valor positivo coherente para el negocio.
-     * @param mensaje Texto que se muestra al usuario pidiendo el dato.
-     * @return double Valor validado mayor que cero.
-     */
     private static double leerDouble(String mensaje) {
         while (true) {
             try {
                 System.out.print(mensaje);
                 double valor = sc.nextDouble();
-                sc.nextLine(); // Limpiar el buffer
-
-                // --- VALIDACIÓN DE NEGOCIO v1.0 ---
+                sc.nextLine();
                 if (valor <= 0) {
-                    System.out.println("Error: El valor debe ser mayor que 0. Inténtelo de nuevo.");
-                    continue; // Vuelve al principio del bucle sin salir
+                    System.out.println("Error: El valor debe ser mayor a 0.");
+                    continue;
                 }
-
                 return valor;
-
             } catch (Exception e) {
-                System.out.println("Error: Introduzca un valor numérico (use coma para decimales).");
-                sc.nextLine(); // Limpiar el buffer en caso de error de tipo
+                System.out.println("Error: Use un formato numérico válido.");
+                sc.nextLine();
             }
         }
     }

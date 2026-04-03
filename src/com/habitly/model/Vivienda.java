@@ -10,28 +10,53 @@ public abstract class Vivienda implements Serializable {
     private String direccion;
     private double precioBase;
     protected double totalPagadoMes;
-    private EstadoVivienda estado;
+    private EstadoVivienda estado = EstadoVivienda.DISPONIBLE; //
+    private double superficie;
+    private int habitaciones;
+    private int baños;
+    private boolean tieneGaraje;
+    private String conservacion; //Más adelante será Enum, pero por ahora un String es perfecto.
 
     /**
      * Constructor para inicializar una vivienda con dirección y precio.
      * Por defecto, la vivienda nace en estado DISPONIBLE.
      */
-    public Vivienda(String direccion, double precioBase) {
+    public Vivienda(String direccion, double precioBase, double superficie, int habitaciones, int baños, boolean tieneGaraje, String conservacion) {
         this.direccion = direccion;
         this.precioBase = precioBase;
+        this.superficie = superficie;
+        this.habitaciones = habitaciones;
+        this.baños = baños;
+        this.tieneGaraje = tieneGaraje;
+        this.conservacion = conservacion;
         this.totalPagadoMes = 0;
-        this.estado = EstadoVivienda.DISPONIBLE;
+        // El estado ya se inicializa como DISPONIBLE arriba en el atributo
     }
 
-    // --- GETTERS Y SETTERS ---
+    // --- GETTERS ---
     public String getDireccion() { return direccion; }
 
     public double getPrecioBase() { return precioBase; }
 
     public EstadoVivienda getEstado() { return estado; }
 
+    public double getSuperficie() { return superficie; }
+
+    public int getHabitaciones() { return habitaciones; }
+
+    public int getBaños() { return baños; }
+
+    public boolean isTieneGaraje() { return tieneGaraje; }
+
+    public String getConservacion() { return conservacion; }
+
+    public double getTotalPagadoMes() { return totalPagadoMes; }
+
+    // --- SETTER
     public void setEstado(EstadoVivienda estado) { this.estado = estado; }
 
+
+    // --- MÉTODOS ---
     /**
      * Registra un ingreso de dinero para la mensualidad actual.
      * Incrementa el acumulador de pagos realizados por el inquilino.
@@ -82,4 +107,12 @@ public abstract class Vivienda implements Serializable {
     public void aplicarSubidaAnual(double porcentaje) {
         this.precioBase += (this.precioBase * porcentaje / 100);
     }
+
+    public double getPrecioMetroCuadrado()
+    {
+        if (superficie <= 0)
+        {return 0.0;}
+        else {return precioBase/superficie;}
+    }
+
 }
