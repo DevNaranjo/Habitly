@@ -7,7 +7,7 @@ import java.util.Scanner;
 /**
  * Clase principal que gestiona la interfaz de usuario de Habitly.
  * @author DevNaranjo
- * @version V1.0
+ * @version V1.0.1A
  * @since 29-03-26
  */
 public class GestionInmobiliaria {
@@ -16,7 +16,7 @@ public class GestionInmobiliaria {
     private static GestorInventario gestor = new GestorInventario();
 
     public static void main(String[] args) {
-        // Cargamos datos al iniciar el sistema
+        // Cargamos datos al iniciar el sistema (ahora desde ruta segura y con AES)
         gestor.cargarDatos();
 
         int opcion = 0;
@@ -30,7 +30,8 @@ public class GestionInmobiliaria {
                 case 3 -> gestionarPago();
                 case 4 -> aplicarIPCGeneral();
                 case 5 -> System.out.println("Saliendo del sistema de Gestión Inmobiliaria... ¡Hasta pronto!");
-                default -> System.out.println("Opción no válida (1-5).");
+                case 6 -> borrarDatosSistema(); // Nueva funcionalidad v1.0.1A
+                default -> System.out.println("Opción no válida (1-6).");
             }
         } while (opcion != 5);
 
@@ -48,6 +49,27 @@ public class GestionInmobiliaria {
         System.out.println("3. Registrar Pago");
         System.out.println("4. Aplicar IPC");
         System.out.println("5. Salir");
+        System.out.println("6. Borrar datos de aplicación");
+    }
+
+    /**
+     * Gestiona el proceso de borrado físico y lógico de los datos de la aplicación.
+     * Incluye una confirmación explícita para evitar pérdidas accidentales.
+     */
+    private static void borrarDatosSistema() {
+        System.out.println("\nADVERTENCIA: Esta acción eliminará permanentemente todos los datos.");
+        System.out.print("¿Está seguro de que desea continuar? (Escriba 'SI' para confirmar): ");
+        String confirmacion = sc.nextLine().toUpperCase();
+
+        if (confirmacion.equals("SI")) {
+            if (gestor.borrarDatosAplicacion()) {
+                System.out.println("Todos los datos han sido eliminados correctamente del sistema.");
+            } else {
+                System.out.println("Error: No se pudo completar la eliminación de los archivos.");
+            }
+        } else {
+            System.out.println("Operación cancelada. Sus datos están a salvo.");
+        }
     }
 
     private static void registrarVivienda() {
@@ -170,7 +192,7 @@ public class GestionInmobiliaria {
     /**
      * Utilidad para leer números decimales de forma segura.
      * Valida que el dato sea numérico y que sea un valor positivo coherente para el negocio.
-     * * @param mensaje Texto que se muestra al usuario pidiendo el dato.
+     * @param mensaje Texto que se muestra al usuario pidiendo el dato.
      * @return double Valor validado mayor que cero.
      */
     private static double leerDouble(String mensaje) {
