@@ -16,6 +16,7 @@ public abstract class Vivienda implements Serializable {
     private int baños;
     private boolean tieneGaraje;
     private String conservacion; //Más adelante será Enum, pero por ahora un String es perfecto.
+    private Usuario usuario;
 
     /**
      * Constructor para inicializar una vivienda con dirección y precio.
