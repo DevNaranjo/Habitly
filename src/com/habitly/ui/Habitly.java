@@ -10,8 +10,8 @@ import java.util.Scanner;
 /**
  * Clase principal que gestiona la interfaz de usuario de Habitly.
  * Coordina la interacción entre el usuario y el sistema de persistencia cifrado.
- * * @author DevNaranjo
- * @version V1.0.3 (Etapa 3 - Gestión de Usuarios y Cifrado)
+ * @author DevNaranjo
+ * @version V1.0.32
  * @since 03-04-26
  */
 public class Habitly {
@@ -19,11 +19,6 @@ public class Habitly {
     private static Scanner sc = new Scanner(System.in);
     private static GestorInventario gestor = new GestorInventario();
 
-    /**
-     * Punto de entrada principal de la aplicación.
-     * Gestiona el bucle de ejecución y la carga inicial de datos.
-     * @param args Argumentos de línea de comandos (no utilizados).
-     */
     public static void main(String[] args) {
         // Inicialización del sistema: Carga de datos cifrados con AES
         try {
@@ -31,6 +26,12 @@ public class Habitly {
         } catch (Exception e) {
             System.out.println("Aviso: Error de compatibilidad al cargar datos previos.");
             System.out.println("Se recomienda realizar un borrado de fábrica (Opción 7).");
+        }
+
+        // V1.0.32: Setup Wizard forzado
+        // Mientras no haya usuarios, no permitimos el acceso al menú principal
+        while (gestor.obtenerTodosLosUsuarios().isEmpty()) {
+            mostrarAsistenteInicial();
         }
 
         int opcion = 0;
@@ -58,8 +59,45 @@ public class Habitly {
     }
 
     /**
-     * Muestra el menú principal de la aplicación por consola.
+     * Asistente de configuración inicial que fuerza la creación de un perfil.
      */
+    private static void mostrarAsistenteInicial() {
+        System.out.println("\nBIENVENIDO A TU ESPACIO EN HABITLY");
+        System.out.println("Para comenzar a gestionar tus viviendas, primero necesitamos saber quién eres.");
+        System.out.println("Esto permitirá que todas las operaciones queden vinculadas a tu perfil.");
+        System.out.println("----------------------------------------------------------------------");
+        System.out.println("1. Registrarme como PROPIETARIO (Voy a alquilar mis inmuebles)");
+        System.out.println("2. Registrarme como INQUILINO (Busco gestionar mis alquileres)");
+        System.out.println("3. Acceder como INVITADO (Solo quiero probar la aplicación)");
+        System.out.println("----------------------------------------------------------------------");
+
+        int opcion = leerEntero("¿Cómo quieres empezar hoy?: ");
+
+        switch (opcion) {
+            case 1 -> registrarPropietario(); // El método interno sigue siendo el mismo, pero la invitación cambia
+            case 2 -> registrarInquilino();
+            case 3 -> activarModoInvitado();
+            default -> System.out.println("[!] Por favor, elige una opción para configurar tu cuenta.");
+        }
+    }
+
+    /**
+     * Crea un perfil técnico temporal.
+     * NOTA: Al no llamar a gestor.guardarDatos(), esta sesión es volátil
+     * y los cambios no persistirán en el archivo cifrado.
+     */
+    private static void activarModoInvitado() {
+        System.out.println("\n[!] MODO INVITADO ACTIVADO (Sesión temporal)");
+        System.out.println("Puedes explorar todas las funciones, pero los datos se borrarán al salir.");
+        
+        Propietario invitado = new Propietario("GUEST-001", "Invitado Temporal", 0, "guest@habitly.com", false);
+
+        // Lo añadimos al gestor para que el 'while' del main detecte que hay 1 usuario y nos deje pasar
+        if (gestor.añadirUsuario(invitado)) {
+            System.out.println("Acceso temporal concedido. Identificador: GUEST-001");
+        }
+    }
+
     private static void mostrarMenu() {
         System.out.println("\n========================================");
         System.out.println("    HABITLY - GESTIÓN INMOBILIARIA v1.0.3");
@@ -76,12 +114,17 @@ public class Habitly {
 
     // --- MÉTODOS PARA LAS VIVIENDAS ---
 
-    /**
-     * Captura los datos necesarios para registrar una nueva vivienda (Piso o Casa).
-     * Tras el registro, persiste los datos automáticamente.
-     */
     private static void registrarVivienda() {
         System.out.println("\n--- NUEVO REGISTRO DE VIVIENDA ---");
+
+        // V1.0.32: Ahora sabemos que al menos existe un usuario (o invitado)
+        System.out.print("DNI del Propietario responsable: ");
+        String dniProp = sc.nextLine();
+
+        if (gestor.obtenerUsuario(dniProp) == null) {
+            System.out.println("Error: El DNI no existe. Registre al propietario primero.");
+            return;
+        }
 
         System.out.print("Dirección: ");
         String direccion = sc.nextLine();
@@ -115,12 +158,9 @@ public class Habitly {
         }
 
         gestor.guardarDatos();
-        System.out.println("Registro completado y datos cifrados.");
+        System.out.println("Registro completado y datos vinculados.");
     }
 
-    /**
-     * Muestra por consola la lista detallada de todas las viviendas registradas.
-     */
     private static void listarInventario() {
         if (gestor.estaVacio()) {
             System.out.println("El inventario está vacío.");
@@ -142,9 +182,6 @@ public class Habitly {
         }
     }
 
-    /**
-     * Permite registrar el pago de una mensualidad sobre una vivienda específica.
-     */
     private static void gestionarPago() {
         if (gestor.estaVacio()) {
             System.out.println("No hay viviendas registradas.");
@@ -165,9 +202,6 @@ public class Habitly {
         }
     }
 
-    /**
-     * Aplica un incremento porcentual a todas las viviendas del inventario.
-     */
     private static void aplicarIPCGeneral() {
         if (gestor.estaVacio()) {
             System.out.println("No hay viviendas para actualizar.");
@@ -182,9 +216,6 @@ public class Habitly {
         System.out.println("Precios actualizados.");
     }
 
-    /**
-     * Elimina el archivo de datos local y vacía las estructuras de memoria.
-     */
     private static void borrarDatosSistema() {
         System.out.print("\n¿Confirmar borrado total? (Escriba 'SI'): ");
         String confirmacion = sc.nextLine().toUpperCase();
@@ -192,6 +223,7 @@ public class Habitly {
         if (confirmacion.equals("SI")) {
             if (gestor.borrarDatosAplicacion()) {
                 System.out.println("Datos eliminados correctamente.");
+                // Al borrar todo, el main volverá a pedir el Setup Wizard al reiniciar
             } else {
                 System.out.println("Error al intentar borrar los archivos.");
             }
@@ -202,9 +234,6 @@ public class Habitly {
 
     // --- MÉTODOS PARA LOS USUARIOS ---
 
-    /**
-     * Gestiona el submenú de administración de usuarios.
-     */
     private static void registrarUsuarioMenu() {
         int opcionUsuario = 0;
         do {
@@ -223,9 +252,6 @@ public class Habitly {
         } while (opcionUsuario != 6);
     }
 
-    /**
-     * Muestra el menú de gestión de usuarios.
-     */
     private static void mostrarMenuUsuario() {
         System.out.println("\n========================================");
         System.out.println("    HABITLY - REGISTRO USUARIO v1.0.3");
@@ -239,33 +265,25 @@ public class Habitly {
         System.out.println("----------------------------------------");
     }
 
-    /**
-     * Captura datos y registra un objeto Propietario en el sistema.
-     * Permite distinguir entre propietarios particulares y empresas.
-     */
     public static void registrarPropietario() {
         System.out.println("\n--- NUEVO REGISTRO DE PROPIETARIO ---");
         System.out.print("DNI/CIF: ");
         String dni = sc.nextLine();
 
-        // Validación de duplicados en el Gestor
         if (gestor.obtenerUsuario(dni) != null) {
             System.out.println("Error: Ya existe un usuario registrado con este DNI.");
             return;
         }
 
-        //Pedir datos
         System.out.print("Nombre completo: ");
         String nombre = sc.nextLine();
         int telefono = leerEntero("Teléfono de contacto: ");
         System.out.print("E-mail: ");
         String email = sc.nextLine();
 
-        // Validación de tipo de propietario
         System.out.println("\n--- TIPO DE TITULARIDAD ---");
         boolean esEmpresa = leerBoolean("¿El propietario es una empresa/sociedad? (S/N): ");
 
-        //Añadir el propietario
         Propietario p = new Propietario(dni, nombre, telefono, email, esEmpresa);
         if (gestor.añadirUsuario(p)) {
             gestor.guardarDatos();
@@ -273,9 +291,6 @@ public class Habitly {
         }
     }
 
-    /**
-     * Captura datos y registra un objeto Inquilino en el sistema, incluyendo solvencia.
-     */
     public static void registrarInquilino() {
         System.out.println("\n--- NUEVO REGISTRO DE INQUILINO ---");
         System.out.print("DNI: ");
@@ -286,7 +301,6 @@ public class Habitly {
             return;
         }
 
-        //Pedir datos
         System.out.print("Nombre completo: ");
         String nombre = sc.nextLine();
         int telefono = leerEntero("Teléfono de contacto: ");
@@ -294,12 +308,6 @@ public class Habitly {
         String email = sc.nextLine();
 
         System.out.println("\n--- EVALUACIÓN DE RIESGO FINANCIERO ---");
-        System.out.println("Guía de Solvencia Habitly:");
-        System.out.println(" [ 0 - 40 ] Riesgo Alto (Sin avales / Ingresos bajos)");
-        System.out.println(" [ 41 - 70] Riesgo Medio (Solvencia estándar / Avales)");
-        System.out.println(" [ 71 - 100] Riesgo Bajo (Funcionario / Perfil Premium)");
-
-        // Validación de rango (0-100)
         int solvencia;
         while (true) {
             solvencia = leerEntero("Introduzca el índice calculado (0-100): ");
@@ -309,7 +317,6 @@ public class Habitly {
             System.out.println("Error: El índice debe estar entre 0 y 100.");
         }
 
-        //Añadir el inquilino
         Inquilino i = new Inquilino(dni, nombre, telefono, email, solvencia);
         if (gestor.añadirUsuario(i)) {
             gestor.guardarDatos();
@@ -317,13 +324,7 @@ public class Habitly {
         }
     }
 
-
-    /**
-     * Lista todos los usuarios usando el patrón Iterator.
-     * Este método demuestra cómo recorrer una colección de forma segura y profesional.
-     */
     private static void listarUsuarios() {
-        // Obtenemos la lista de usuarios del gestor
         List<Usuario> lista = gestor.obtenerTodosLosUsuarios();
 
         if (lista.isEmpty()) {
@@ -341,62 +342,40 @@ public class Habitly {
 
         while (it.hasNext()) {
             Usuario u = it.next();
-
             String perfil = (u instanceof Propietario) ? "PROPIETARIO" : "INQUILINO";
             String detalles = "";
 
-            // Lógica polimórfica para los detalles
             if (u instanceof Inquilino inq) {
                 detalles = "Solvencia: " + inq.getSolvencia() + "%";
             } else if (u instanceof Propietario prop) {
                 detalles = prop.isEsEmpresa() ? "Empresa/CIF" : "Particular";
             }
 
-            System.out.printf("%-12s | %-20s | %-12s | %-15s%n",
-                    u.getDni(),
-                    u.getNombre(),
-                    perfil,
-                    detalles);
+            System.out.printf("%-12s | %-20s | %-12s | %-15s%n", u.getDni(), u.getNombre(), perfil, detalles);
         }
         System.out.println("====================================================================");
     }
 
-    /**
-     * Busca un usuario por DNI y muestra su información detallada.
-     * Utiliza polimorfismo para identificar el tipo de usuario.
-     */
     public static void buscarUsuario() {
         System.out.println("\n--- BUSCADOR DE USUARIO ---");
-        System.out.print("Introduce el DNI del usuario a buscar: ");
+        System.out.print("Introduce el DNI: ");
         String dni = sc.nextLine();
 
         Usuario u = gestor.obtenerUsuario(dni);
         if (u != null) {
             String tipo = (u instanceof Propietario) ? "PROPIETARIO" : "INQUILINO";
             System.out.println("----------------------------------------");
-            System.out.println("Tipo: " + tipo);
-            System.out.println("Nombre: " + u.getNombre());
-            System.out.println("DNI: " + u.getDni());
-            System.out.println("Email: " + u.getEmail());
-            System.out.println("Teléfono: " + u.getTelefono());
-
-            if (u instanceof Inquilino inq) {
-                System.out.println("Solvencia: " + inq.getSolvencia() + "/100");
-            } else if (u instanceof Propietario prop) {
-                System.out.println("Es Empresa: " + (prop.isEsEmpresa() ? "SÍ" : "NO"));
-            }
+            System.out.println("Tipo: " + tipo + " | Nombre: " + u.getNombre());
+            System.out.println("DNI: " + u.getDni() + " | Email: " + u.getEmail());
             System.out.println("----------------------------------------");
         } else {
-            System.out.println("Error: No se encontró ningún usuario con ese DNI.");
+            System.out.println("Error: No se encontró ningún usuario.");
         }
     }
 
-    /**
-     * Elimina a un usuario del sistema tras confirmación por DNI.
-     */
     public static void eliminarUsuario() {
         System.out.println("\n--- ELIMINADOR DE USUARIO ---");
-        System.out.print("Introduce el DNI del usuario que quiera eliminar: ");
+        System.out.print("DNI a eliminar: ");
         String dni = sc.nextLine();
 
         if (gestor.obtenerUsuario(dni) == null) {
@@ -404,74 +383,52 @@ public class Habitly {
             return;
         }
 
-        System.out.print("¿Confirmar borrado de usuario? (Escriba 'SI'): ");
-        String confirmacion = sc.nextLine().toUpperCase();
-
-        if (confirmacion.equals("SI")) {
+        System.out.print("¿Confirmar borrado? (SI): ");
+        if (sc.nextLine().toUpperCase().equals("SI")) {
             if (gestor.eliminarUsuario(dni)) {
                 gestor.guardarDatos();
-                System.out.println("Usuario eliminado correctamente.");
+                System.out.println("Usuario eliminado.");
             }
-        } else {
-            System.out.println("Operación cancelada.");
         }
     }
 
     // --- UTILIDADES DE ENTRADA ---
 
-    /**
-     * Lee una entrada booleana basada en caracteres S o N.
-     * @param mensaje Texto a mostrar al usuario.
-     * @return true si la entrada es S, false si es N.
-     */
     private static boolean leerBoolean(String mensaje) {
         while (true) {
             System.out.print(mensaje);
             String input = sc.nextLine().trim().toUpperCase();
             if (input.equals("S")) return true;
             if (input.equals("N")) return false;
-            System.out.println("Error: Responda con 'S' o 'N'.");
+            System.out.println("Error: Responda S o N.");
         }
     }
 
-    /**
-     * Lee un número entero de la consola con validación.
-     * @param mensaje Texto a mostrar al usuario.
-     * @return El número entero introducido.
-     */
     private static int leerEntero(String mensaje) {
         while (true) {
             try {
                 System.out.print(mensaje);
                 int valor = sc.nextInt();
-                sc.nextLine(); // Limpiar buffer
+                sc.nextLine();
                 return valor;
             } catch (Exception e) {
                 System.out.println("Error: Introduzca un número entero.");
-                sc.nextLine(); // Limpiar buffer en caso de error
+                sc.nextLine();
             }
         }
     }
 
-    /**
-     * Lee un número decimal de la consola con validación de valor positivo.
-     * @param mensaje Texto a mostrar al usuario.
-     * @return El número decimal introducido.
-     */
     private static double leerDouble(String mensaje) {
         while (true) {
             try {
                 System.out.print(mensaje);
                 double valor = sc.nextDouble();
-                sc.nextLine(); // Limpiar buffer
-                if (valor <= 0) {
-                    System.out.println("Error: El valor debe ser mayor a 0.");
-                    continue;
-                }
+                sc.nextLine();
+                if (valor <= 0) continue;
                 return valor;
             } catch (Exception e) {
-                System.out.println("Error: Use un formato numérico válido.");
-                sc.nextLine(); // Limpiar buffer en caso de error
+                System.out.println("Error: Formato numérico no válido.");
+                sc.nextLine();
             }
         }
     }

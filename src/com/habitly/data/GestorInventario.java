@@ -1,6 +1,5 @@
 package com.habitly.data;
 
-import com.habitly.config.AppConfig;
 import com.habitly.model.Usuario;
 import com.habitly.model.Vivienda;
 import java.io.*;
@@ -9,10 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Gestor de persistencia y lógica de colección para Habitly (v1.0).
+ * Gestor de persistencia y lógica de colección para Habitly (v1.0.32).
+ * Coordina la memoria RAM con el almacenamiento cifrado AES-128.
  * @author DevNaranjo
- * @version V1.0.3
- * @since 02-04-26
+ * @version V1.0.32
+ * @since 03-04-26
  */
 public class GestorInventario {
 
@@ -22,56 +22,49 @@ public class GestorInventario {
     public GestorInventario() {
         this.inventario = new ArrayList<>();
         this.usuarios = new HashMap<>();
-
-        //Intentamos rellenar el inventario y los usuarios con lo que haya en el archivo cifrado
-        cargarDatos();
+        // El constructor no llama a cargarDatos() directamente para
+        // dejar que Habitly.java controle el flujo del Setup Wizard.
     }
 
     // --- MÉTODOS DE PERSISTENCIA UNIFICADOS (v1.0.3) ---
 
     /**
      * Serializa el inventario y los usuarios, aplica cifrado AES-128
-     * mediante CryptoManager y guarda el resultado.
+     * y guarda el resultado en el repositorio local.
      */
     public void guardarDatos() {
-        // Empaquetamos todo en la "maleta"
-        CajaFuerte maleta = new CajaFuerte(this.inventario, this.usuarios);
+        try {
+            // Empaquetamos todo en la "maleta"
+            CajaFuerte maleta = new CajaFuerte(this.inventario, this.usuarios);
 
-        // La pasamos al CryptoManager para que la cifre y la guarde en disco
-        // Usamos el nombre de archivo unificado
-        CryptoManager.guardarObjetoCifrado(maleta, "sistema.dat");
-        System.out.println("Sistema cifrado y guardado correctamente.");
+            // Ciframos y guardamos
+            CryptoManager.guardarObjetoCifrado(maleta, "sistema.dat");
+        } catch (Exception e) {
+            System.err.println("Error crítico al cifrar los datos: " + e.getMessage());
+        }
     }
 
     /**
-     * Lee el archivo cifrado, aplica descifrado AES-128 y reconstruye
-     * tanto el inventario como el mapa de usuarios en memoria.
+     * Recupera y descifra el archivo de sistema, reconstruyendo
+     * las estructuras de datos en memoria.
      */
     public void cargarDatos() {
         Object cargado = CryptoManager.leerObjetoCifrado("sistema.dat");
 
         if (cargado instanceof CajaFuerte maleta) {
-            // Desempaquetamos y recuperamos nuestras estructuras
-            this.inventario = maleta.listaViviendas;
-            this.usuarios = maleta.mapaUsuarios;
-            System.out.println("Datos recuperados con éxito.");
-        } else {
-            // Si el archivo no existe, las estructuras ya están vacías por el constructor
-            System.out.println("No se detectó archivo previo. Iniciando sistema limpio.");
+            if (maleta.listaViviendas != null) this.inventario = maleta.listaViviendas;
+            if (maleta.mapaUsuarios != null) this.usuarios = maleta.mapaUsuarios;
         }
+        // Si no hay archivo o es null, las estructuras permanecen vacías (listas para el Setup Wizard)
     }
 
     /**
-     * Realiza una limpieza integral de los datos de la aplicación.
-     * Elimina el archivo cifrado del disco y vacía las listas en memoria.
-     * @return true si el archivo fue eliminado exitosamente; false si hubo error.
+     * Borrado de fábrica: Limpia la memoria y elimina el archivo físico.
      */
     public boolean borrarDatosAplicacion() {
-        // Vaciar la memoria RAM
         this.inventario.clear();
         this.usuarios.clear();
 
-        // Borrar el archivo físico
         File archivo = new File("sistema.dat");
         if (archivo.exists()) {
             return archivo.delete();
@@ -81,10 +74,9 @@ public class GestorInventario {
 
     // --- MÉTODOS DE LÓGICA DE USUARIOS ---
 
-    /**
-     * Registra un nuevoUsuario en el sistema utilizando su DNI como identificador único.
-     */
     public boolean añadirUsuario(Usuario nuevoUsuario) {
+        if (nuevoUsuario == null) return false;
+
         String dni = nuevoUsuario.getDni();
         if (usuarios.containsKey(dni)) {
             return false;
@@ -99,22 +91,22 @@ public class GestorInventario {
     }
 
     public boolean eliminarUsuario(String dni) {
-        if (usuarios.containsKey(dni)) {
-            usuarios.remove(dni);
-            return true;
-        }
-        return false;
+        return usuarios.remove(dni) != null;
     }
 
+    /**
+     * Retorna una lista segura de todos los usuarios registrados.
+     * Vital para el Setup Wizard y el listado con Iterator.
+     */
     public List<Usuario> obtenerTodosLosUsuarios() {
-        // Esto asume que usas un HashMap o ArrayList para usuarios
+        if (usuarios == null) return new ArrayList<>();
         return new ArrayList<>(usuarios.values());
     }
 
     // --- MÉTODOS DE LÓGICA DE VIVIENDAS ---
 
     public void añadirVivienda(Vivienda v) {
-        inventario.add(v);
+        if (v != null) inventario.add(v);
     }
 
     public boolean estaVacio() {
@@ -126,7 +118,10 @@ public class GestorInventario {
     }
 
     public Vivienda obtenerVivienda(int indice) {
-        return inventario.get(indice);
+        if (indice >= 0 && indice < inventario.size()) {
+            return inventario.get(indice);
+        }
+        return null;
     }
 
     public ArrayList<Vivienda> getInventario() {
