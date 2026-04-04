@@ -1,128 +1,117 @@
 package com.habitly.data;
 
 import com.habitly.config.AppConfig;
+import com.habitly.model.Usuario;
 import com.habitly.model.Vivienda;
 import java.io.*;
-import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Gestor de persistencia y lógica de colección para Habitly (v1.0).
  * @author DevNaranjo
- *  @version V1.0
- *  @since 02-04-26
+ * @version V1.0.3
+ * @since 02-04-26
  */
 public class GestorInventario {
 
     private ArrayList<Vivienda> inventario;
+    private HashMap<String, Usuario> usuarios;
 
     public GestorInventario() {
         this.inventario = new ArrayList<>();
+        this.usuarios = new HashMap<>();
+
+        //Intentamos rellenar el inventario y los usuarios con lo que haya en el archivo cifrado
+        cargarDatos();
     }
 
-    // --- MÉTODOS DE PERSISTENCIA UNIFICADOS (v1.0.1A) ---
+    // --- MÉTODOS DE PERSISTENCIA UNIFICADOS (v1.0.3) ---
 
     /**
-     * Serializa el inventario, aplica cifrado AES-128 mediante CryptoManager
-     * y guarda el resultado en la ruta de sistema definida en AppConfig.
+     * Serializa el inventario y los usuarios, aplica cifrado AES-128
+     * mediante CryptoManager y guarda el resultado.
      */
     public void guardarDatos() {
-        AppConfig.asegurarDirectorio();
-        String rutaSegura = AppConfig.getFullFilePath();
+        // Empaquetamos todo en la "maleta"
+        CajaFuerte maleta = new CajaFuerte(this.inventario, this.usuarios);
 
-        try {
-            // 1. Convertimos el ArrayList en un array de bytes (en memoria)
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-                oos.writeObject(this.inventario);
-            }
-            byte[] datosPlano = baos.toByteArray();
-
-            // 2. Ciframos los bytes con nuestra "llave fantasma"
-            byte[] datosCifrados = CryptoManager.cifrar(datosPlano);
-
-            // 3. Guardamos los bytes cifrados en el archivo físico
-            try (FileOutputStream fos = new FileOutputStream(rutaSegura)) {
-                fos.write(datosCifrados);
-            }
-
-            System.out.println("[SISTEMA] Datos cifrados y blindados en: " + rutaSegura);
-        } catch (Exception e) {
-            System.err.println("Error crítico en el blindaje de datos: " + e.getMessage());
-        }
+        // La pasamos al CryptoManager para que la cifre y la guarde en disco
+        // Usamos el nombre de archivo unificado
+        CryptoManager.guardarObjetoCifrado(maleta, "sistema.dat");
+        System.out.println("Sistema cifrado y guardado correctamente.");
     }
 
     /**
      * Lee el archivo cifrado, aplica descifrado AES-128 y reconstruye
-     * el inventario de viviendas en memoria.
+     * tanto el inventario como el mapa de usuarios en memoria.
      */
     public void cargarDatos() {
-        String rutaSegura = AppConfig.getFullFilePath();
-        File archivo = new File(rutaSegura);
+        Object cargado = CryptoManager.leerObjetoCifrado("sistema.dat");
 
-        if (!archivo.exists()) {
-            this.inventario = new ArrayList<>();
-            return;
-        }
-
-        try {
-            // 1. Leemos los bytes cifrados del archivo
-            byte[] datosCifrados = Files.readAllBytes(archivo.toPath());
-
-            // 2. Desciframos los bytes
-            byte[] datosPlano = CryptoManager.descifrar(datosCifrados);
-
-            // 3. Convertimos los bytes de vuelta a objetos (Deserialización)
-            ByteArrayInputStream bais = new ByteArrayInputStream(datosPlano);
-            try (ObjectInputStream ois = new ObjectInputStream(bais)) {
-                this.inventario = (ArrayList<Vivienda>) ois.readObject();
-            }
-
-            System.out.println("[SISTEMA] Datos descifrados y cargados correctamente.");
-        } catch (Exception e) {
-            System.err.println("Error al descifrar datos (¿Llave incorrecta?): " + e.getMessage());
-            this.inventario = new ArrayList<>();
-        }
-    }
-
-    public void guardarInventario(ArrayList<Vivienda> lista) {
-        //Nos aseguramos de que la ruta externa existe
-        AppConfig.asegurarDirectorio();
-
-        //Usamos la ruta dinámica de AppConfig
-        String rutaFinal = AppConfig.getFullFilePath();
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(rutaFinal))) {
-            oos.writeObject(lista);
-            System.out.println("Datos guardados correctamente en el sistema.");
-        } catch (IOException e) {
-            System.out.println("Error al guardar: " + e.getMessage());
+        if (cargado instanceof CajaFuerte maleta) {
+            // Desempaquetamos y recuperamos nuestras estructuras
+            this.inventario = maleta.listaViviendas;
+            this.usuarios = maleta.mapaUsuarios;
+            System.out.println("Datos recuperados con éxito.");
+        } else {
+            // Si el archivo no existe, las estructuras ya están vacías por el constructor
+            System.out.println("No se detectó archivo previo. Iniciando sistema limpio.");
         }
     }
 
     /**
      * Realiza una limpieza integral de los datos de la aplicación.
-     * Elimina el archivo cifrado del disco y vacía la lista en memoria.
-     * * @return true si el archivo fue eliminado exitosamente o no existía;
-     * false si hubo un error de permisos o E/S.
+     * Elimina el archivo cifrado del disco y vacía las listas en memoria.
+     * @return true si el archivo fue eliminado exitosamente; false si hubo error.
      */
     public boolean borrarDatosAplicacion() {
-        //Vaciar la lista en la memoria RAM
+        // Vaciar la memoria RAM
         this.inventario.clear();
+        this.usuarios.clear();
 
-        //Obtener la ruta del archivo físico
-        File archivo = new File(AppConfig.getFullFilePath());
-
-        //Si el archivo existe, intentar borrarlo
+        // Borrar el archivo físico
+        File archivo = new File("sistema.dat");
         if (archivo.exists()) {
             return archivo.delete();
         }
-
-        // Si no existe, consideramos que la limpieza ya está hecha
         return true;
     }
 
-    // --- MÉTODOS PUENTE ---
+    // --- MÉTODOS DE LÓGICA DE USUARIOS ---
+
+    /**
+     * Registra un nuevoUsuario en el sistema utilizando su DNI como identificador único.
+     */
+    public boolean añadirUsuario(Usuario nuevoUsuario) {
+        String dni = nuevoUsuario.getDni();
+        if (usuarios.containsKey(dni)) {
+            return false;
+        } else {
+            usuarios.put(dni, nuevoUsuario);
+            return true;
+        }
+    }
+
+    public Usuario obtenerUsuario(String dni) {
+        return usuarios.get(dni);
+    }
+
+    public boolean eliminarUsuario(String dni) {
+        if (usuarios.containsKey(dni)) {
+            usuarios.remove(dni);
+            return true;
+        }
+        return false;
+    }
+
+    public List<Usuario> obtenerTodosLosUsuarios() {
+        // Esto asume que usas un HashMap o ArrayList para usuarios
+        return new ArrayList<>(usuarios.values());
+    }
+
+    // --- MÉTODOS DE LÓGICA DE VIVIENDAS ---
 
     public void añadirVivienda(Vivienda v) {
         inventario.add(v);
@@ -138,5 +127,9 @@ public class GestorInventario {
 
     public Vivienda obtenerVivienda(int indice) {
         return inventario.get(indice);
+    }
+
+    public ArrayList<Vivienda> getInventario() {
+        return inventario;
     }
 }
