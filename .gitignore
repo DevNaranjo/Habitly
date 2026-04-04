@@ -1,22 +1,36 @@
-﻿# IntelliJ
+# --- IntelliJ & IDE ---
+.idea/
+*.iml
+out/
+gen/
+# Configuraciones específicas de JetBrains que a veces se escapan
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf/
-*.iml
+.idea/inspectionProfiles/
 
-# Compilados Java
-out/
+# --- Compilados Java ---
 build/
 target/
 *.class
+bin/
 
-# Persistencia local
+# --- Persistencia y Datos (v1.0.32) ---
+# Bloqueamos el archivo de datos real para que el repo baje "limpio"
+sistema.dat
+*.bin
+# Mantenemos storage/ bloqueado como ya tenías
 storage/
-*.dat
 
-# Sistema
+# --- Sistema Operativo ---
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Logs temporales
+# --- Logs y Temporales ---
 *.log
+*.tmp
+
+# --- Notas de Estructura ---
+# No ignoramos 'archive', 'devlog' ni 'docs' porque son parte de tu documentación 
+# de proyecto y queremos que se vean en GitHub.
