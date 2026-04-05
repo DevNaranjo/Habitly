@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Representa una vivienda de tipo Casa o Unifamiliar.
  * Extiende la funcionalidad de Vivienda añadiendo información sobre el terreno y características físicas.
  * @author DevNaranjo
- * @version 1.0.2
+ * @version 1.0.21
  * @since 03-04-26
  */
 public class Casa extends Vivienda implements Serializable
@@ -17,24 +17,27 @@ public class Casa extends Vivienda implements Serializable
     /**
      * Constructor para la clase Casa.
      * Delega la configuración de datos base y técnicos a la superclase.
-     * * @param direccion Ubicación de la casa.
+     * @param direccion Ubicación de la casa.
      * @param precioBase Mensualidad neta acordada.
      * @param superficie Metros cuadrados construidos.
      * @param habitaciones Número de dormitorios.
      * @param baños Número de cuartos de baño.
      * @param tieneGaraje Indica si incluye zona de aparcamiento.
+     * @param tienePiscina Indica si dispone de piscina privada.
+     * @param estaAmueblado Indica si la casa se entrega con mobiliario.
      * @param conservacion Descripción del estado físico (ej: "A reformar").
      * @param metrosParcela Superficie total del terreno en m².
      */
     public Casa(String direccion, double precioBase, double superficie, int habitaciones,
-                int baños, boolean tieneGaraje, String conservacion, double metrosParcela)
+                int baños, boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado,
+                String conservacion, double metrosParcela)
     {
-        // Invocación al constructor actualizado de Vivienda
-        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, conservacion);
+        // Invocación al constructor actualizado de Vivienda (v1.0.21) con los 9 parámetros
+        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, tienePiscina, estaAmueblado, conservacion);
         this.metrosParcela = metrosParcela;
     }
 
-    // --- Lógica de Negocio (obligatorio) ---
+    // --- Lógica de Negocio ---
 
     /**
      * Calcula el precio final de la mensualidad de la casa aplicando el IGIC.

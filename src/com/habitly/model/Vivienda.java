@@ -18,17 +18,25 @@ public abstract class Vivienda implements Serializable {
     private String conservacion; //Más adelante será Enum, pero por ahora un String es perfecto.
     private Usuario usuario;
 
+    //Parche v1.0.21: Ampliación del Modelo
+    private boolean tienePiscina;
+    private boolean estaAmueblado;
+
     /**
      * Constructor para inicializar una vivienda con dirección y precio.
      * Por defecto, la vivienda nace en estado DISPONIBLE.
      */
-    public Vivienda(String direccion, double precioBase, double superficie, int habitaciones, int baños, boolean tieneGaraje, String conservacion) {
+    public Vivienda(String direccion, double precioBase, double superficie, int habitaciones, int baños,
+                    boolean tieneGaraje, boolean tienePiscina,  boolean estaAmueblado, String conservacion)
+    {
         this.direccion = direccion;
         this.precioBase = precioBase;
         this.superficie = superficie;
         this.habitaciones = habitaciones;
         this.baños = baños;
         this.tieneGaraje = tieneGaraje;
+        this.tienePiscina = tienePiscina; // Asignación parche v1.0.21
+        this.estaAmueblado = estaAmueblado; // Asignación parche v1.0.21
         this.conservacion = conservacion;
         this.totalPagadoMes = 0;
         // El estado ya se inicializa como DISPONIBLE arriba en el atributo
@@ -49,13 +57,22 @@ public abstract class Vivienda implements Serializable {
 
     public boolean isTieneGaraje() { return tieneGaraje; }
 
+    /** Getters para el parche v1.0.21 */
+    public boolean isTienePiscina() { return tienePiscina; }
+
     public String getConservacion() { return conservacion; }
 
     public double getTotalPagadoMes() { return totalPagadoMes; }
 
-    // --- SETTER
+    public boolean isEstaAmueblado() { return estaAmueblado; }
+
+    // --- SETTERS ---
     public void setEstado(EstadoVivienda estado) { this.estado = estado; }
 
+    /** Setter para el parche v1.0.21 */
+    public void setTienePiscina(boolean tienePiscina) { this.tienePiscina = tienePiscina; }
+
+    public void setEstaAmueblado(boolean estaAmueblado) { this.estaAmueblado = estaAmueblado; }
 
     // --- MÉTODOS ---
     /**
@@ -72,7 +89,7 @@ public abstract class Vivienda implements Serializable {
         //Si no está vendida realiza el pago
         this.totalPagadoMes += cuota;
 
-        // Si se completa el pago, pasa a ser alquilada (temporal)
+        //Si se completa el pago, pasa a ser alquilada (temporal)
         if (isPagadoCompleto() && this.estado == EstadoVivienda.DISPONIBLE) {
             this.estado = EstadoVivienda.ALQUILADA;
             System.out.println("SISTEMA: La vivienda ha pasado automáticamente a estado ALQUILADA.");
@@ -109,6 +126,10 @@ public abstract class Vivienda implements Serializable {
         this.precioBase += (this.precioBase * porcentaje / 100);
     }
 
+    /**
+     * Calcula el precio por metro cuadrado de la vivienda.
+     * @return El precio por m2 o 0.0 si la superficie es inválida.
+     */
     public double getPrecioMetroCuadrado()
     {
         if (superficie <= 0)

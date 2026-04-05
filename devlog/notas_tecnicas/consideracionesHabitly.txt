@@ -6,3 +6,11 @@
 	BETA v2.0: Se crea una base sólida de la expansión a la Península teniendo en cuenta absolutamente todo (lo general) que aplica en esta misma.
 	BETA v2.1 - v2.17: Se gestiona en cada versión los impuestos y consideraciones únicas a cada comunidad autónoma (incluyendo Ceuta y melilla y exceptuando canarias)
 	v2.0: Se lanza de forma oficial la expansión a la península ibérica.
+
+-----------------------------------------------------------------------------------------------
+v1.0.21 - v1.0.32
+Como modo invitado deberías de poder añadir un usuario? Yo creo que no.
+
+Tenemos un menú de entrada para "Registarme como..." Pero y si el usuario ya está registrado y quiero acceder? Eso lo podemos añadir A CONTINUACIÓN en un parche 1.0.33
+
+

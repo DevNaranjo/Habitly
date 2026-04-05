@@ -11,7 +11,7 @@ import java.util.Scanner;
  * Clase principal que gestiona la interfaz de usuario de Habitly.
  * Coordina la interacción entre el usuario y el sistema de persistencia cifrado.
  * @author DevNaranjo
- * @version V1.0.32
+ * @version 1.0.32 (Etapa 2)
  * @since 03-04-26
  */
 public class Habitly {
@@ -29,7 +29,6 @@ public class Habitly {
         }
 
         // V1.0.32: Setup Wizard forzado
-        // Mientras no haya usuarios, no permitimos el acceso al menú principal
         while (gestor.obtenerTodosLosUsuarios().isEmpty()) {
             mostrarAsistenteInicial();
         }
@@ -53,14 +52,11 @@ public class Habitly {
                 case 7 -> borrarDatosSistema();
                 default -> System.out.println("Error: Opción no válida.");
             }
-        } while (opcion != 6);
+        } while (opcion != 6 && opcion != 7); //Al borrar los datos del sistema también se sale.
 
         sc.close();
     }
 
-    /**
-     * Asistente de configuración inicial que fuerza la creación de un perfil.
-     */
     private static void mostrarAsistenteInicial() {
         System.out.println("\nBIENVENIDO A TU ESPACIO EN HABITLY");
         System.out.println("Para comenzar a gestionar tus viviendas, primero necesitamos saber quién eres.");
@@ -74,25 +70,19 @@ public class Habitly {
         int opcion = leerEntero("¿Cómo quieres empezar hoy?: ");
 
         switch (opcion) {
-            case 1 -> registrarPropietario(); // El método interno sigue siendo el mismo, pero la invitación cambia
+            case 1 -> registrarPropietario();
             case 2 -> registrarInquilino();
             case 3 -> activarModoInvitado();
             default -> System.out.println("[!] Por favor, elige una opción para configurar tu cuenta.");
         }
     }
 
-    /**
-     * Crea un perfil técnico temporal.
-     * NOTA: Al no llamar a gestor.guardarDatos(), esta sesión es volátil
-     * y los cambios no persistirán en el archivo cifrado.
-     */
     private static void activarModoInvitado() {
         System.out.println("\n[!] MODO INVITADO ACTIVADO (Sesión temporal)");
         System.out.println("Puedes explorar todas las funciones, pero los datos se borrarán al salir.");
-        
+
         Propietario invitado = new Propietario("GUEST-001", "Invitado Temporal", 0, "guest@habitly.com", false);
 
-        // Lo añadimos al gestor para que el 'while' del main detecte que hay 1 usuario y nos deje pasar
         if (gestor.añadirUsuario(invitado)) {
             System.out.println("Acceso temporal concedido. Identificador: GUEST-001");
         }
@@ -100,11 +90,11 @@ public class Habitly {
 
     private static void mostrarMenu() {
         System.out.println("\n========================================");
-        System.out.println("    HABITLY - GESTIÓN INMOBILIARIA v1.0.3");
+        System.out.println("    HABITLY - GESTIÓN INMOBILIARIA v1.0.21");
         System.out.println("========================================");
         System.out.println("1. Gestionar usuarios (Propietarios/Inquilinos)");
         System.out.println("2. Registrar nueva vivienda");
-        System.out.println("3. Consultar inventario y ratios (EUR/m2)");
+        System.out.println("3. Consultar inventario detallado");
         System.out.println("4. Registrar cobro de mensualidad");
         System.out.println("5. Actualización de precios (IPC)");
         System.out.println("6. Salir del programa");
@@ -112,12 +102,11 @@ public class Habitly {
         System.out.println("----------------------------------------");
     }
 
-    // --- MÉTODOS PARA LAS VIVIENDAS ---
+    // --- MÉTODOS ACTUALIZADOS V1.0.21 (ETAPA 2 FINAL) ---
 
     private static void registrarVivienda() {
         System.out.println("\n--- NUEVO REGISTRO DE VIVIENDA ---");
 
-        // V1.0.32: Ahora sabemos que al menos existe un usuario (o invitado)
         System.out.print("DNI del Propietario responsable: ");
         String dniProp = sc.nextLine();
 
@@ -134,6 +123,8 @@ public class Habitly {
         int habitaciones = leerEntero("Número de habitaciones: ");
         int baños = leerEntero("Número de baños: ");
         boolean tieneGaraje = leerBoolean("¿Tiene garaje? (S/N): ");
+        boolean tienePiscina = leerBoolean("¿Tiene piscina? (S/N): ");
+        boolean estaAmueblado = leerBoolean("¿Está amueblado? (S/N): "); // Requisito Etapa 2
 
         System.out.print("Estado de conservación (Nuevo/Reformado/A reformar): ");
         String conservacion = sc.nextLine();
@@ -149,16 +140,16 @@ public class Habitly {
             String puerta = sc.nextLine();
 
             gestor.añadirVivienda(new Piso(direccion, precioBase, superficie, habitaciones,
-                    baños, tieneGaraje, conservacion, planta, puerta));
+                    baños, tieneGaraje, tienePiscina, estaAmueblado, conservacion, planta, puerta));
         } else {
             double metrosParcela = leerDouble("Metros de parcela/terreno: ");
 
             gestor.añadirVivienda(new Casa(direccion, precioBase, superficie, habitaciones,
-                    baños, tieneGaraje, conservacion, metrosParcela));
+                    baños, tieneGaraje, tienePiscina, estaAmueblado, conservacion, metrosParcela));
         }
 
         gestor.guardarDatos();
-        System.out.println("Registro completado y datos vinculados.");
+        System.out.println("Registro completado con éxito.");
     }
 
     private static void listarInventario() {
@@ -166,19 +157,29 @@ public class Habitly {
             System.out.println("El inventario está vacío.");
             return;
         }
-        System.out.println("\n--- INVENTARIO DETALLADO ---");
+        System.out.println("\n==========================================================================================");
+        System.out.println("                                INVENTARIO DE INMUEBLES v1.0.21");
+        System.out.println("==========================================================================================");
+        System.out.printf("%-3s | %-12s | %-15s | %-6s | %-4s | %-6s | %-8s%n",
+                "ID", "ESTADO", "DIRECCIÓN", "TIPO", "M2", "EUR/M2", "EXTRAS");
+        System.out.println("------------------------------------------------------------------------------------------");
+
         for (int i = 0; i < gestor.tamañoInventario(); i++) {
             Vivienda v = gestor.obtenerVivienda(i);
 
             String tipo = (v instanceof Piso) ? "Piso" : "Casa";
-            String garaje = v.isTieneGaraje() ? "Con Garaje" : "Sin Garaje";
+            // G = Garaje, P = Piscina, A = Amueblado
+            String extras = (v.isTieneGaraje() ? "G" : "-") +
+                    (v.isTienePiscina() ? "P" : "-") +
+                    (v.isEstaAmueblado() ? "A" : "-");
 
-            System.out.printf("%d. [%s] [%s] %s%n", (i + 1), v.getEstado(), tipo, v.getDireccion());
-            System.out.printf("   Detalles: %d hab, %d baños | %.1f m2 | %s | %s%n",
-                    v.getHabitaciones(), v.getBaños(), v.getSuperficie(), v.getConservacion(), garaje);
-            System.out.printf("   Económico: Base: %.2f EUR | Pendiente: %.2f EUR | Ratio: %.2f EUR/m2%n",
-                    v.getPrecioBase(), v.getPendienteDePago(), v.getPrecioMetroCuadrado());
-            System.out.println("   --------------------------------------------------------");
+            System.out.printf("%-3d | %-12s | %-15.15s | %-6s | %-4.0f | %-6.2f | [%-3s]%n",
+                    (i + 1), v.getEstado(), v.getDireccion(), tipo,
+                    v.getSuperficie(), v.getPrecioMetroCuadrado(), extras);
+
+            System.out.printf("    > Detalle: %d hab, %d baños | %s | Pendiente: %.2f EUR%n",
+                    v.getHabitaciones(), v.getBaños(), v.getConservacion(), v.getPendienteDePago());
+            System.out.println("------------------------------------------------------------------------------------------");
         }
     }
 
@@ -223,7 +224,6 @@ public class Habitly {
         if (confirmacion.equals("SI")) {
             if (gestor.borrarDatosAplicacion()) {
                 System.out.println("Datos eliminados correctamente.");
-                // Al borrar todo, el main volverá a pedir el Setup Wizard al reiniciar
             } else {
                 System.out.println("Error al intentar borrar los archivos.");
             }
@@ -231,8 +231,6 @@ public class Habitly {
             System.out.println("Operación cancelada.");
         }
     }
-
-    // --- MÉTODOS PARA LOS USUARIOS ---
 
     private static void registrarUsuarioMenu() {
         int opcionUsuario = 0;
@@ -391,8 +389,6 @@ public class Habitly {
             }
         }
     }
-
-    // --- UTILIDADES DE ENTRADA ---
 
     private static boolean leerBoolean(String mensaje) {
         while (true) {

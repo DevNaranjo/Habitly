@@ -1,0 +1,20 @@
+### 🛠️ MODO DESARROLLADOR: PROYECTO HABITLY v1.0.21 🚀
+
+**Contexto Actual:**
+- **Fase del Roadmap**: Iniciando ETAPA 2 (Ampliación del Modelo de Vivienda).
+- **Versión de Git**: v1.0.32 (Clean Build) -> Próximo Salto: v1.0.21 (Patch de Mejora).
+- **Stack Técnico**: Java SE, Cifrado AES-128, Patrón Iterator, Persistencia Volátil/Fija.
+- **Estructura de Archivos**: Confirmada mediante comando 'tree' (Docs, Devlog, Src, Tests).
+
+**Misión de la Sesión:**
+1. Modificar la clase abstracta `Vivienda` y sus hijas (`Piso`, `Casa`) para incluir: superficie útil, estado de conservación, piscina y garaje.
+2. Sincronizar la `CajaFuerte` para que estos nuevos datos se cifren y guarden correctamente en `sistema.dat`.
+3. Actualizar los métodos de visualización (Tablas en `Habitly.java`) para mostrar estos nuevos atributos.
+
+**Reglas de Estilo Obligatorias:**
+- Títulos de commit según jerarquía (Patch: ... v1.0.21 🩹).
+- Descripciones de commit en INGLÉS con EMOJIS.
+- Mantener el 'Setup Wizard' inicial y el 'Modo Invitado'.
+- JavaDoc en cada nuevo atributo.
+
+**¿Confirmas la recepción del Roadmap y la Etapa 2? Si es así, propón la estructura de la clase Vivienda actualizada.**

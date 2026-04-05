@@ -7,7 +7,7 @@ import java.io.Serializable;
  * Hereda de la clase Vivienda los atributos de ubicación, precio y características físicas.
  *
  * @author Iriome
- * @version 1.0.2
+ * @version 1.0.21
  * @since 03-04-26
  */
 public class Piso extends Vivienda implements Serializable
@@ -26,20 +26,23 @@ public class Piso extends Vivienda implements Serializable
      * @param habitaciones Número de dormitorios.
      * @param baños Número de cuartos de baño.
      * @param tieneGaraje Indica si incluye plaza de garaje.
+     * @param tienePiscina Indica si dispone de piscina comunitaria.
+     * @param estaAmueblado Indica si el piso incluye mobiliario.
      * @param conservacion Descripción del estado físico (ej: "Reformado").
      * @param planta Nivel en la que se encuentra el piso.
      * @param puerta Identificador específico (ej: "A", "Izquierda", "1").
      */
     public Piso(String direccion, double precioBase, double superficie, int habitaciones,
-                int baños, boolean tieneGaraje, String conservacion, int planta, String puerta)
+                int baños, boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado,
+                String conservacion, int planta, String puerta)
     {
-        // Invocación al constructor actualizado de la superclase (Vivienda)
-        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, conservacion);
+        // Invocación al constructor actualizado de la superclase (Vivienda v1.0.21)
+        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, tienePiscina, estaAmueblado, conservacion);
         this.planta = planta;
         this.puerta = puerta;
     }
 
-    // --- Lógica de Negocio (obligatorio) ---
+    // --- Lógica de Negocio ---
 
     /**
      * Calcula el precio final de la mensualidad del piso aplicando el IGIC.
@@ -51,44 +54,37 @@ public class Piso extends Vivienda implements Serializable
         return getPrecioBase() * 1.07;
     }
 
+    //--- GETTERS ---
     /**
      * Obtiene el identificador de la puerta del piso.
-     *
      * @return String con la puerta.
      */
-    public String getPuerta()
-    {
+    public String getPuerta() {
         return puerta;
     }
 
     /**
      * Obtiene el número de planta.
-     *
      * @return int con el nivel del piso.
      */
-    public int getPlanta()
-    {
+    public int getPlanta() {
         return planta;
     }
 
+    //--- SETTERS ---
     /**
      * Actualiza la identificación de la puerta.
-     *
      * @param nuevaPuerta Nueva cadena para identificar la puerta.
      */
-    public void setPuerta(String nuevaPuerta)
-    {
+    public void setPuerta(String nuevaPuerta) {
         this.puerta = nuevaPuerta;
     }
 
     /**
      * Actualiza el número de planta del inmueble.
-     *
      * @param nuevaPlanta Nuevo valor entero para la planta.
      */
-    public void setPlanta(int nuevaPlanta)
-    {
-        // El error estaba aquí: debe ser this.planta
+    public void setPlanta(int nuevaPlanta) {
         this.planta = nuevaPlanta;
     }
 }
