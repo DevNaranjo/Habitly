@@ -9,6 +9,9 @@ import java.time.LocalDate;
  */
 public abstract class Usuario implements Serializable {
 
+    //ID de versión estático
+    private static final long serialVersionUID = 1L;
+
     //Atributos específicos de la clase
     private String dni; //PK 4 HashMap
     private String nombre;

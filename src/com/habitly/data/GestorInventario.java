@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Gestor de persistencia y lógica de colección para Habitly (v1.0.32).
+ * Gestor de persistencia y lógica de colección para Habitly (v1.0.33).
  * Coordina la memoria RAM con el almacenamiento cifrado AES-128.
- * @author DevNaranjo
- * @version V1.0.32
+ * * @author DevNaranjo
+ * @version V1.0.33
  * @since 03-04-26
  */
 public class GestorInventario {
@@ -19,61 +19,104 @@ public class GestorInventario {
     private ArrayList<Vivienda> inventario;
     private HashMap<String, Usuario> usuarios;
 
+    // Atributo específico para gestionar la sesión activa (v1.0.33)
+    private Usuario usuarioIdentificado;
+
+    //Definimos la carpeta y la ruta usando el separador del sistema (v1.0.33)
+    private final String CARPETA_DATA = "data";
+    private final String RUTA_SISTEMA = CARPETA_DATA + File.separator + "sistema.dat";
+
     public GestorInventario() {
         this.inventario = new ArrayList<>();
         this.usuarios = new HashMap<>();
-        // El constructor no llama a cargarDatos() directamente para
-        // dejar que Habitly.java controle el flujo del Setup Wizard.
+        this.usuarioIdentificado = null;
     }
 
-    // --- MÉTODOS DE PERSISTENCIA UNIFICADOS (v1.0.3) ---
+// --- MÉTODOS DE PERSISTENCIA ACTUALIZADOS (v1.0.33) ---
 
     /**
      * Serializa el inventario y los usuarios, aplica cifrado AES-128
-     * y guarda el resultado en el repositorio local.
+     * y guarda el resultado en el repositorio local dentro de /data.
      */
     public void guardarDatos() {
         try {
-            // Empaquetamos todo en la "maleta"
+            File directorio = new File(CARPETA_DATA);
+
+            // Creamos la carpeta si no existe antes de guardar
+            if (!directorio.exists()) {
+                directorio.mkdirs();
+            }
+
+            // Empaquetamos los datos en la clase contenedor
             CajaFuerte maleta = new CajaFuerte(this.inventario, this.usuarios);
 
-            // Ciframos y guardamos
-            CryptoManager.guardarObjetoCifrado(maleta, "sistema.dat");
+            // Ciframos y guardamos usando la ruta multiplataforma
+            CryptoManager.guardarObjetoCifrado(maleta, RUTA_SISTEMA);
+
         } catch (Exception e) {
+            // Importante: No solo mostrar el mensaje, a veces conviene ver la traza
             System.err.println("Error crítico al cifrar los datos: " + e.getMessage());
         }
     }
 
     /**
-     * Recupera y descifra el archivo de sistema, reconstruyendo
-     * las estructuras de datos en memoria.
+     * Recupera y descifra el archivo de sistema desde /data.
+     * Verifica existencia y tamaño para evitar excepciones de flujo.
      */
     public void cargarDatos() {
-        Object cargado = CryptoManager.leerObjetoCifrado("sistema.dat");
+        File archivo = new File(RUTA_SISTEMA);
 
-        if (cargado instanceof CajaFuerte maleta) {
-            if (maleta.listaViviendas != null) this.inventario = maleta.listaViviendas;
-            if (maleta.mapaUsuarios != null) this.usuarios = maleta.mapaUsuarios;
+        // Verificación de robustez: ¿Existe y tiene contenido?
+        if (archivo.exists() && archivo.length() > 0) {
+            try {
+                Object cargado = CryptoManager.leerObjetoCifrado(RUTA_SISTEMA);
+
+                if (cargado instanceof CajaFuerte maleta) {
+                    if (maleta.listaViviendas != null) this.inventario = maleta.listaViviendas;
+                    if (maleta.mapaUsuarios != null) this.usuarios = maleta.mapaUsuarios;
+                }
+            } catch (Exception e) {
+                System.err.println("[!] Error al descifrar el archivo de datos.");
+            }
+        } else {
+            // No hay error, simplemente es la primera vez que se usa la app
+            System.out.println("[Habitly] Iniciando sistema nuevo (Base de datos vacía).");
         }
-        // Si no hay archivo o es null, las estructuras permanecen vacías (listas para el Setup Wizard)
     }
 
     /**
-     * Borrado de fábrica: Limpia la memoria y elimina el archivo físico.
+     * Borrado de fábrica: Limpia la memoria RAM y elimina el archivo físico en /data.
+     * @return true si el archivo se eliminó o no existía, false si hubo un error de bloqueo.
      */
     public boolean borrarDatosAplicacion() {
+        //Limpiamos la "RAM" del programa
         this.inventario.clear();
         this.usuarios.clear();
+        this.usuarioIdentificado = null; //Cerramos la sesión actual
 
-        File archivo = new File("sistema.dat");
+        //Intentamos borrar el archivo físico en la nueva ruta
+        File archivo = new File(RUTA_SISTEMA);
+
         if (archivo.exists()) {
-            return archivo.delete();
+            try {
+                return archivo.delete(); //Devuelve true si el SO permite borrarlo
+            } catch (SecurityException e) {
+                System.err.println("[!] Error de permisos al intentar borrar: " + e.getMessage());
+                return false;
+            }
         }
+
+        //Si el archivo no existe, técnicamente ya está "borrado"
         return true;
     }
 
     // --- MÉTODOS DE LÓGICA DE USUARIOS ---
 
+    /**
+     * Registra un nuevo usuario validando que el DNI no esté duplicado.
+     * @param nuevoUsuario Objeto usuario a añadir.
+     * @return true si se añadió, false si el DNI ya existe.
+     */
     public boolean añadirUsuario(Usuario nuevoUsuario) {
         if (nuevoUsuario == null) return false;
 
@@ -95,8 +138,16 @@ public class GestorInventario {
     }
 
     /**
-     * Retorna una lista segura de todos los usuarios registrados.
-     * Vital para el Setup Wizard y el listado con Iterator.
+     * Establece el usuario que ha iniciado sesión en la ejecución actual.
+     * @param usuarioIdentificado Usuario validado.
+     */
+    public void setUsuarioIdentificado(Usuario usuarioIdentificado) {
+        this.usuarioIdentificado = usuarioIdentificado;
+    }
+
+    /**
+     * Retorna una lista de todos los usuarios registrados.
+     * @return List de usuarios (ArrayList).
      */
     public List<Usuario> obtenerTodosLosUsuarios() {
         if (usuarios == null) return new ArrayList<>();
@@ -126,5 +177,22 @@ public class GestorInventario {
 
     public ArrayList<Vivienda> getInventario() {
         return inventario;
+    }
+
+    /**
+     * Obtiene el usuario que tiene la sesión activa.
+     * @return Usuario identificado o null si es invitado/no logueado.
+     */
+    public Usuario getUsuarioIdentificado() {
+        return usuarioIdentificado;
+    }
+
+    /**
+     * Busca un usuario por DNI dentro del mapa de registros.
+     * @param dni Cadena con el DNI/CIF.
+     * @return El usuario encontrado o null.
+     */
+    public Usuario buscarPorDni(String dni) {
+        return usuarios.getOrDefault(dni, null);
     }
 }

@@ -7,10 +7,20 @@
 	BETA v2.1 - v2.17: Se gestiona en cada versión los impuestos y consideraciones únicas a cada comunidad autónoma (incluyendo Ceuta y melilla y exceptuando canarias)
 	v2.0: Se lanza de forma oficial la expansión a la península ibérica.
 
------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+
 v1.0.21 - v1.0.32
 Como modo invitado deberías de poder añadir un usuario? Yo creo que no.
 
 Tenemos un menú de entrada para "Registarme como..." Pero y si el usuario ya está registrado y quiero acceder? Eso lo podemos añadir A CONTINUACIÓN en un parche 1.0.33
 
+---------------------------------------------------------------------------------------------
 
+Atributos transient (Lo que NO quieres guardar) 🛡️
+¿Hay algo en tus clases que no deba guardarse en el disco?
+
+Ejemplo: Si tuvieras una contraseña o un objeto Scanner dentro de una clase, no podrías serializarlo.
+
+En Habitly: De momento todo parece persistente, pero es bueno recordar que si añades algo temporal (como un token de sesión que caduca), debes marcarlo como private transient String token;.
+
+---------------------------------------------------------------------------------------------

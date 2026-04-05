@@ -4,21 +4,21 @@ import java.io.Serializable;
 
 /**
  * Representa una vivienda de tipo Piso dentro de un régimen de propiedad horizontal.
- * Hereda de la clase Vivienda los atributos de ubicación, precio y características físicas.
- *
- * @author Iriome
- * @version 1.0.21
- * @since 03-04-26
+ * Implementa el cálculo de impuestos específico (IGIC 7%) para entorno urbano.
+ * * @author DevNaranjo
+ * @version 1.0.33
+ * @since 29-03-26
  */
-public class Piso extends Vivienda implements Serializable
-{
-    // Atributos específicos del tipo Piso
+public class Piso extends Vivienda implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private int planta;
     private String puerta;
 
     /**
      * Constructor para la clase Piso.
-     * Utiliza el mecanismo de herencia para inicializar los datos base y técnicos.
+     * Inicializa los atributos base mediante la superclase y los específicos de planta/puerta.
      *
      * @param direccion Ubicación física del edificio.
      * @param precioBase Importe del alquiler sin impuestos.
@@ -28,21 +28,22 @@ public class Piso extends Vivienda implements Serializable
      * @param tieneGaraje Indica si incluye plaza de garaje.
      * @param tienePiscina Indica si dispone de piscina comunitaria.
      * @param estaAmueblado Indica si el piso incluye mobiliario.
-     * @param conservacion Descripción del estado físico (ej: "Reformado").
+     * @param conservacion Descripción del estado físico.
      * @param planta Nivel en la que se encuentra el piso.
-     * @param puerta Identificador específico (ej: "A", "Izquierda", "1").
+     * @param puerta Identificador específico (ej: "1ºA").
      */
     public Piso(String direccion, double precioBase, double superficie, int habitaciones,
                 int baños, boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado,
-                String conservacion, int planta, String puerta)
-    {
-        // Invocación al constructor actualizado de la superclase (Vivienda v1.0.21)
-        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, tienePiscina, estaAmueblado, conservacion);
+                String conservacion, int planta, String puerta) {
+
+        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje,
+                tienePiscina, estaAmueblado, conservacion);
+
         this.planta = planta;
         this.puerta = puerta;
     }
 
-    // --- Lógica de Negocio ---
+    // --- LÓGICA DE NEGOCIO ---
 
     /**
      * Calcula el precio final de la mensualidad del piso aplicando el IGIC.
@@ -50,40 +51,26 @@ public class Piso extends Vivienda implements Serializable
      */
     @Override
     public double getPrecioFinalConImpuestos() {
-        // Aplicamos el 7% de IGIC sobre el precio base.
-        return getPrecioBase() * 1.07;
+        // Redondeamos a dos decimales para evitar errores de precisión en los tests
+        return Math.round((getPrecioBase() * 1.07) * 100.0) / 100.0;
     }
 
-    //--- GETTERS ---
-    /**
-     * Obtiene el identificador de la puerta del piso.
-     * @return String con la puerta.
-     */
+    // --- GETTERS ---
+
     public String getPuerta() {
         return puerta;
     }
 
-    /**
-     * Obtiene el número de planta.
-     * @return int con el nivel del piso.
-     */
     public int getPlanta() {
         return planta;
     }
 
-    //--- SETTERS ---
-    /**
-     * Actualiza la identificación de la puerta.
-     * @param nuevaPuerta Nueva cadena para identificar la puerta.
-     */
+    // --- SETTERS ---
+
     public void setPuerta(String nuevaPuerta) {
         this.puerta = nuevaPuerta;
     }
 
-    /**
-     * Actualiza el número de planta del inmueble.
-     * @param nuevaPlanta Nuevo valor entero para la planta.
-     */
     public void setPlanta(int nuevaPlanta) {
         this.planta = nuevaPlanta;
     }

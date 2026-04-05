@@ -5,6 +5,9 @@ package com.habitly.model;
  */
 public class Inquilino extends Usuario {
 
+    //ID de versión estático
+    private static final long serialVersionUID = 1L;
+
     // Atributo específico: Puntuación de solvencia (0-100)
     private int solvencia;
 

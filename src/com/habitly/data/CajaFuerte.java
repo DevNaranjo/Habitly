@@ -11,6 +11,7 @@ import java.util.HashMap;
  * Agrupa viviendas y usuarios para un cifrado unificado.
  */
 public class CajaFuerte implements Serializable {
+    //ID de versión estático
     private static final long serialVersionUID = 1L;
 
     public ArrayList<Vivienda> listaViviendas;

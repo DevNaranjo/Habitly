@@ -4,70 +4,71 @@ import java.io.Serializable;
 
 /**
  * Representa una vivienda de tipo Casa o Unifamiliar.
- * Extiende la funcionalidad de Vivienda añadiendo información sobre el terreno y características físicas.
- * @author DevNaranjo
- * @version 1.0.21
- * @since 03-04-26
+ * Extiende la funcionalidad de Vivienda añadiendo información sobre el terreno privado.
+ * * @author DevNaranjo
+ * @version 1.0.33
+ * @since 29-03-26
  */
-public class Casa extends Vivienda implements Serializable
-{
-    // Atributo específico: superficie de terreno privado
+public class Casa extends Vivienda implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    // Atributo específico: superficie de terreno privado (parcela)
     private double metrosParcela;
 
     /**
      * Constructor para la clase Casa.
      * Delega la configuración de datos base y técnicos a la superclase.
-     * @param direccion Ubicación de la casa.
-     * @param precioBase Mensualidad neta acordada.
+     * * @param direccion Ubicación física de la propiedad.
+     * @param precioBase Importe del alquiler sin impuestos.
      * @param superficie Metros cuadrados construidos.
      * @param habitaciones Número de dormitorios.
      * @param baños Número de cuartos de baño.
      * @param tieneGaraje Indica si incluye zona de aparcamiento.
      * @param tienePiscina Indica si dispone de piscina privada.
-     * @param estaAmueblado Indica si la casa se entrega con mobiliario.
-     * @param conservacion Descripción del estado físico (ej: "A reformar").
-     * @param metrosParcela Superficie total del terreno en m².
+     * @param estaAmueblado Indica si la casa incluye mobiliario.
+     * @param conservacion Descripción del estado físico.
+     * @param metrosParcela Superficie total del terreno/parcela en m².
      */
     public Casa(String direccion, double precioBase, double superficie, int habitaciones,
                 int baños, boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado,
-                String conservacion, double metrosParcela)
-    {
-        // Invocación al constructor actualizado de Vivienda (v1.0.21) con los 9 parámetros
-        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje, tienePiscina, estaAmueblado, conservacion);
+                String conservacion, double metrosParcela) {
+
+        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje,
+                tienePiscina, estaAmueblado, conservacion);
+
         this.metrosParcela = metrosParcela;
     }
 
-    // --- Lógica de Negocio ---
+    // --- LÓGICA DE NEGOCIO ---
 
     /**
-     * Calcula el precio final de la mensualidad de la casa aplicando el IGIC.
+     * Calcula el precio final de la mensualidad de la casa aplicando el IGIC (7%).
+     * Se aplica un redondeo a dos decimales para garantizar la precisión en los tests.
      * @return double con el precio final (Base + 7% IGIC).
      */
     @Override
     public double getPrecioFinalConImpuestos() {
-        // Aplicamos el 7% de IGIC sobre el precio base.
-        return getPrecioBase() * 1.07;
+        return Math.round((getPrecioBase() * 1.07) * 100.0) / 100.0;
     }
 
-    // --- Getters ---
+    // --- GETTERS ---
 
     /**
-     * Obtiene la superficie de la parcela.
+     * Obtiene la superficie de la parcela privada.
      * @return double con los metros cuadrados del terreno.
      */
-    public double getMetrosParcela()
-    {
+    public double getMetrosParcela() {
         return metrosParcela;
     }
 
-    // --- Setters ---
+    // --- SETTERS ---
 
     /**
-     * Permite modificar la extensión de la parcela registrada.
-     * @param nuevosMetrosParcela Valor decimal con la nueva superficie.
+     * Actualiza la extensión de la parcela registrada.
+     * @param nuevosMetrosParcela Nuevo valor para la superficie del terreno.
      */
-    public void setMetrosParcela(double nuevosMetrosParcela)
-    {
+    public void setMetrosParcela(double nuevosMetrosParcela) {
         this.metrosParcela = nuevosMetrosParcela;
     }
 }
