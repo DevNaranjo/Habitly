@@ -1,8 +1,13 @@
 package com.habitly.model;
 
 /**
- * Representa al residente de una vivienda.
+ * Representa a un usuario con rol de arrendatario.
+ * Incluye atributos de calificación crediticia y solvencia para el filtrado de alquileres.
+ * * @author DevNaranjo
+ * @version 1.0.34
+ * @since 1.0.3
  */
+
 public class Inquilino extends Usuario {
 
     //ID de versión estático

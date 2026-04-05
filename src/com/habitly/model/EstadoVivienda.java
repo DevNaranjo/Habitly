@@ -1,7 +1,11 @@
 package com.habitly.model;
 
 /**
- * Enumeración que define los posibles estados de una vivienda en el sistema.
+    * Definición de los estados legales y operativos de un inmueble.
+    * Controla la disponibilidad de las viviendas para procesos de reserva y alquiler.
+    * @author DevNaranjo
+    * @version 1.0.34
+    * @since 1.0.0
  */
 public enum EstadoVivienda {
     DISPONIBLE,

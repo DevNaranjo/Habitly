@@ -3,12 +3,13 @@ package com.habitly.model;
 import java.io.Serializable;
 
 /**
- * Representa una vivienda de tipo Casa o Unifamiliar.
- * Extiende la funcionalidad de Vivienda añadiendo información sobre el terreno privado.
+ * Especialización de vivienda para inmuebles independientes.
+ * Gestiona atributos de superficie de terreno y áreas exteriores privadas.
  * * @author DevNaranjo
- * @version 1.0.33
- * @since 29-03-26
+ * @version 1.0.34
+ * @since 1.0.0
  */
+
 public class Casa extends Vivienda implements Serializable {
 
     private static final long serialVersionUID = 1L;

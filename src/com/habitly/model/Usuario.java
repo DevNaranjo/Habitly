@@ -4,9 +4,13 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
- * Clase base abstracta para todos los usuarios de Habitly.
- * Implementa Serializable para permitir el guardado cifrado.
+ * Clase abstracta que define la estructura base de un usuario en Habitly.
+ * Proporciona los atributos comunes de identificación y contacto.
+ * * @author DevNaranjo
+ * @version 1.0.34
+ * @since 1.0.3
  */
+
 public abstract class Usuario implements Serializable {
 
     //ID de versión estático

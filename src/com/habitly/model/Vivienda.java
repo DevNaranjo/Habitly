@@ -3,12 +3,13 @@ package com.habitly.model;
 import java.io.Serializable;
 
 /**
- * Clase abstracta que representa la base de cualquier vivienda en Habitly.
- * Gestiona la lógica de precios, pagos y estados de ocupación.
+ * Representa una unidad inmobiliaria dentro del inventario.
+ * Gestiona la lógica de precios, estado de ocupación y mantenimiento.
  * * @author DevNaranjo
- * @version 1.0.33
- * @since 29-03-26
+ * @version 1.0.34
+ * @since 1.0.0
  */
+
 public abstract class Vivienda implements Serializable {
 
     private static final long serialVersionUID = 1L;

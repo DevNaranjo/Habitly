@@ -1,8 +1,13 @@
 package com.habitly.model;
 
 /**
- * Representa al dueño de los inmuebles.
+ * Representa a un usuario con rol de dueño de inmuebles.
+ * Gestiona la titularidad de las viviendas y su naturaleza jurídica (Persona/Empresa).
+ * * @author DevNaranjo
+ * @version 1.0.34
+ * @since 1.0.3
  */
+
 public class Propietario extends Usuario {
 
     private boolean esEmpresa;

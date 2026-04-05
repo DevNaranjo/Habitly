@@ -3,12 +3,13 @@ package com.habitly.model;
 import java.io.Serializable;
 
 /**
- * Representa una vivienda de tipo Piso dentro de un régimen de propiedad horizontal.
- * Implementa el cálculo de impuestos específico (IGIC 7%) para entorno urbano.
+ * Especialización de vivienda para inmuebles en régimen de propiedad horizontal.
+ * Añade atributos de ubicación vertical (planta y puerta).
  * * @author DevNaranjo
- * @version 1.0.33
- * @since 29-03-26
+ * @version 1.0.34
+ * @since 1.0.0
  */
+
 public class Piso extends Vivienda implements Serializable {
 
     private static final long serialVersionUID = 1L;

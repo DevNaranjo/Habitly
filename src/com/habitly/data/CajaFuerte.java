@@ -7,9 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Contenedor único para la persistencia del sistema.
- * Agrupa viviendas y usuarios para un cifrado unificado.
+ * Estructura de empaquetado para la persistencia cifrada.
+ * Permite agrupar las colecciones de usuarios e inventario en un único objeto serializable.
+ * * @author DevNaranjo
+ * @version 1.0.34
+ * @since 1.0.3
  */
+
 public class CajaFuerte implements Serializable {
     //ID de versión estático
     private static final long serialVersionUID = 1L;

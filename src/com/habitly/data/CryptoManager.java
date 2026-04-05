@@ -11,12 +11,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
- * Motor de criptografía para la aplicación Habitly.
- * Proporciona servicios de cifrado y descifrado simétrico AES-128.
- *
- * @author DevNaranjo
- * @version 1.0.3
+ * Utilidad técnica para el cifrado y descifrado de flujos de objetos.
+ * Implementa el estándar AES-128 para garantizar la privacidad de los datos locales.
+ * * @author DevNaranjo
+ * @version 1.0.34
+ * @since 1.0.3
  */
+
 public class CryptoManager {
 
     private static final String ALGORITMO = "AES";

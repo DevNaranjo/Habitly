@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Gestor de persistencia y lógica de colección para Habitly (v1.0.33).
- * Coordina la memoria RAM con el almacenamiento cifrado AES-128.
+ * Motor central de lógica de negocio y persistencia.
+ * Coordina las colecciones de datos en memoria con el almacenamiento seguro
+ * en disco mediante cifrado AES.
  * * @author DevNaranjo
- * @version V1.0.33
- * @since 03-04-26
+ * @version 1.0.34
+ * @since 1.0.0
  */
+
 public class GestorInventario {
 
     private ArrayList<Vivienda> inventario;
@@ -86,28 +88,22 @@ public class GestorInventario {
 
     /**
      * Borrado de fábrica: Limpia la memoria RAM y elimina el archivo físico en /data.
+     * v1.0.34 Patch: Refuerzo de limpieza de sesión.
      * @return true si el archivo se eliminó o no existía, false si hubo un error de bloqueo.
      */
     public boolean borrarDatosAplicacion() {
-        //Limpiamos la "RAM" del programa
+        //Limpiamos la memoria RAM
         this.inventario.clear();
         this.usuarios.clear();
-        this.usuarioIdentificado = null; //Cerramos la sesión actual
+        this.usuarioIdentificado = null;
 
-        //Intentamos borrar el archivo físico en la nueva ruta
+        //Intentamos borrar el archivo físico
         File archivo = new File(RUTA_SISTEMA);
 
         if (archivo.exists()) {
-            try {
-                return archivo.delete(); //Devuelve true si el SO permite borrarlo
-            } catch (SecurityException e) {
-                System.err.println("[!] Error de permisos al intentar borrar: " + e.getMessage());
-                return false;
-            }
+            return archivo.delete();
         }
-
-        //Si el archivo no existe, técnicamente ya está "borrado"
-        return true;
+        return true; // Si no existe, el objetivo se cumple.
     }
 
     // --- MÉTODOS DE LÓGICA DE USUARIOS ---
