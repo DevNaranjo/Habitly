@@ -34,7 +34,7 @@ public class GestorInventario {
         this.usuarioIdentificado = null;
     }
 
-// --- MÉTODOS DE PERSISTENCIA ACTUALIZADOS (v1.0.33) ---
+// --- MÉTODOS DE PERSISTENCIA ACTUALIZADOS ---
 
     /**
      * Serializa el inventario y los usuarios, aplica cifrado AES-128
@@ -104,6 +104,42 @@ public class GestorInventario {
             return archivo.delete();
         }
         return true; // Si no existe, el objetivo se cumple.
+    }
+
+    // --- MÉTODOS DE FILTRADO ECONÓMICO (v1.0.4) ---
+
+    /**
+     * Filtra el inventario para devolver solo las viviendas que pertenecen al dueño actual.
+     * @param idDueño El DNI del propietario (procedente de usuarioIdentificado).
+     * @return Lista de viviendas vinculadas al propietario.
+     */
+    public List<Vivienda> getViviendasPorDueño(String idDueño) {
+        List<Vivienda> filtradas = new ArrayList<>();
+
+        // Usamos 'inventario' que es tu ArrayList global
+        for (Vivienda v : inventario) {
+            // IMPORTANTE: Vivienda debe tener el atributo idPropietario
+            if (v.getIdPropietario() != null && v.getIdPropietario().equals(idDueño)) {
+                filtradas.add(v);
+            }
+        }
+        return filtradas;
+    }
+
+    /**
+     * Localiza la vivienda donde reside el inquilino que ha iniciado sesión.
+     * @param idInquilino El DNI del inquilino actual.
+     * @return La vivienda asignada o null si no tiene contrato activo.
+     */
+    public Vivienda getViviendaDeInquilino(String idInquilino) {
+        for (Vivienda v : inventario) {
+            // Verificamos que la vivienda tenga un inquilino asignado
+            // y que el DNI coincida con el del usuario en sesión
+            if (v.getInquilino() != null && v.getInquilino().getDni().equals(idInquilino)) {
+                return v;
+            }
+        }
+        return null;
     }
 
     // --- MÉTODOS DE LÓGICA DE USUARIOS ---

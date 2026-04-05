@@ -6,10 +6,9 @@ import java.io.Serializable;
  * Especialización de vivienda para inmuebles independientes.
  * Gestiona atributos de superficie de terreno y áreas exteriores privadas.
  * * @author DevNaranjo
- * @version 1.0.34
+ * @version 1.0.4
  * @since 1.0.0
  */
-
 public class Casa extends Vivienda implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -20,7 +19,8 @@ public class Casa extends Vivienda implements Serializable {
     /**
      * Constructor para la clase Casa.
      * Delega la configuración de datos base y técnicos a la superclase.
-     * * @param direccion Ubicación física de la propiedad.
+     * * @param idPropietario DNI del dueño que registra la propiedad (v1.0.4).
+     * @param direccion Ubicación física de la propiedad.
      * @param precioBase Importe del alquiler sin impuestos.
      * @param superficie Metros cuadrados construidos.
      * @param habitaciones Número de dormitorios.
@@ -31,11 +31,12 @@ public class Casa extends Vivienda implements Serializable {
      * @param conservacion Descripción del estado físico.
      * @param metrosParcela Superficie total del terreno/parcela en m².
      */
-    public Casa(String direccion, double precioBase, double superficie, int habitaciones,
+    public Casa(String idPropietario, String direccion, double precioBase, double superficie, int habitaciones,
                 int baños, boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado,
                 String conservacion, double metrosParcela) {
 
-        super(direccion, precioBase, superficie, habitaciones, baños, tieneGaraje,
+        // Invocación al constructor de Vivienda actualizado
+        super(idPropietario, direccion, precioBase, superficie, habitaciones, baños, tieneGaraje,
                 tienePiscina, estaAmueblado, conservacion);
 
         this.metrosParcela = metrosParcela;
@@ -55,20 +56,12 @@ public class Casa extends Vivienda implements Serializable {
 
     // --- GETTERS ---
 
-    /**
-     * Obtiene la superficie de la parcela privada.
-     * @return double con los metros cuadrados del terreno.
-     */
     public double getMetrosParcela() {
         return metrosParcela;
     }
 
     // --- SETTERS ---
 
-    /**
-     * Actualiza la extensión de la parcela registrada.
-     * @param nuevosMetrosParcela Nuevo valor para la superficie del terreno.
-     */
     public void setMetrosParcela(double nuevosMetrosParcela) {
         this.metrosParcela = nuevosMetrosParcela;
     }

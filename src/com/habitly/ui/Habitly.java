@@ -7,11 +7,11 @@ import java.util.Scanner;
 
 /**
  * Clase principal que gestiona la interfaz de usuario (UI) de Habitly.
- * * Coordina la interacción entre el usuario y el sistema de persistencia,
+ * Coordina la interacción entre el usuario y el sistema de persistencia,
  * gestionando el flujo de navegación, la validación de entradas y la
  * seguridad basada en roles (Propietario, Inquilino e Invitado).
  * * @author DevNaranjo
- * @version 1.0.34 (Patch: Security, RBAC & persistence fix)
+ * @version 1.0.4 (wip: Economy & persistence)
  * @since 1.0.0
  */
 public class Habitly {
@@ -23,12 +23,14 @@ public class Habitly {
      * Punto de entrada principal. Carga datos y gestiona el bucle de la aplicación.
      */
     public static void main(String[] args) {
+        // Carga inicial de archivos binarios
         try {
             gestor.cargarDatos();
         } catch (Exception e) {
             System.out.println("[!] Aviso: Error de compatibilidad al cargar datos previos.");
         }
 
+        // Obliga a identificarse antes de entrar al menú principal
         while (gestor.getUsuarioIdentificado() == null) {
             mostrarAsistenteInicial();
         }
@@ -36,19 +38,27 @@ public class Habitly {
         int opcion;
         do {
             mostrarMenu();
-            opcion = leerEntero("Seleccione una operación (1-7): ");
+            opcion = leerEntero("Seleccione una operación (1-8): ");
 
             switch (opcion) {
                 case 1 -> registrarUsuarioMenu();
                 case 2 -> registrarVivienda();
                 case 3 -> listarInventario();
-                case 4 -> gestionarPago();
-                case 5 -> aplicarIPCGeneral();
-                case 6 -> cerrarSesionSegura();
-                case 7 -> borrarDatosSistema();
+                case 4 -> {
+                    // Lógica polimórfica según tipo de usuario
+                    if (gestor.getUsuarioIdentificado() instanceof Inquilino) menuEstadoDeCuenta();
+                    else gestionarPago();
+                }
+                case 5 -> {
+                    if (gestor.getUsuarioIdentificado() instanceof Propietario) registrarGastoSuministro();
+                    else System.out.println("[!] Acceso denegado: Solo los propietarios registran facturas.");
+                }
+                case 6 -> aplicarIPCGeneral();
+                case 7 -> cerrarSesionSegura();
+                case 8 -> borrarDatosSistema();
                 default -> System.out.println("Error: Opción no válida.");
             }
-        } while (opcion != 6 && opcion != 7);
+        } while (opcion != 7 && opcion != 8);
 
         sc.close();
     }
@@ -60,6 +70,7 @@ public class Habitly {
         System.out.println("\nGuardando cambios y cerrando sesión...");
         gestor.guardarDatos();
         System.out.println("¡Hasta pronto, " + gestor.getUsuarioIdentificado().getNombre() + "!");
+        gestor.setUsuarioIdentificado(null);
     }
 
     /**
@@ -67,7 +78,7 @@ public class Habitly {
      */
     private static void mostrarAsistenteInicial() {
         System.out.println("\n========================================");
-        System.out.println("       BIENVENIDO A HABITLY v1.0.34");
+        System.out.println("       BIENVENIDO A HABITLY v1.0.4");
         System.out.println("========================================");
         System.out.println("1. Registrarme como PROPIETARIO");
         System.out.println("2. Registrarme como INQUILINO");
@@ -122,18 +133,83 @@ public class Habitly {
      * Muestra el menú principal de operaciones.
      */
     private static void mostrarMenu() {
-        String nombreUser = gestor.getUsuarioIdentificado().getNombre().toUpperCase();
+        Usuario u = gestor.getUsuarioIdentificado();
+        String nombreUser = u.getNombre().toUpperCase();
         System.out.println("\n========================================");
         System.out.println("  HABITLY - SESIÓN: " + nombreUser);
         System.out.println("========================================");
         System.out.println("1. Gestión de usuarios y perfiles");
         System.out.println("2. Registrar nueva vivienda");
         System.out.println("3. Consultar inventario detallado");
-        System.out.println("4. Registrar cobro de mensualidad");
-        System.out.println("5. Actualización de precios (IPC)");
-        System.out.println("6. Salir y Guardar");
-        System.out.println("7. Borrar datos (Reset de fábrica)");
+
+        if (u instanceof Inquilino) {
+            System.out.println("4. MI ESTADO DE CUENTA (Facturas y Deuda)");
+        } else {
+            System.out.println("4. Registrar cobro de mensualidad");
+            System.out.println("5. REGISTRAR FACTURA/SUMINISTRO (v1.0.4)");
+        }
+
+        System.out.println("6. Actualización de precios (IPC)");
+        System.out.println("7. Salir y Guardar");
+        System.out.println("8. Borrar datos (Reset de fábrica)");
         System.out.println("----------------------------------------");
+    }
+
+    /**
+     * Permite a un propietario vincular un nuevo gasto a una de sus propiedades.
+     */
+    private static void registrarGastoSuministro() {
+        List<Vivienda> misPisos = gestor.getViviendasPorDueño(gestor.getUsuarioIdentificado().getDni());
+        if (misPisos.isEmpty()) {
+            System.out.println("[!] No tienes viviendas registradas a tu nombre.");
+            return;
+        }
+
+        System.out.println("\n--- Seleccione Vivienda ---");
+        for (int i = 0; i < misPisos.size(); i++) {
+            System.out.println((i + 1) + ". " + misPisos.get(i).getDireccion());
+        }
+        int sel = leerEntero("Seleccione vivienda: ") - 1;
+
+        if (sel >= 0 && sel < misPisos.size()) {
+            System.out.print("Concepto (Luz, Agua, IBI...): ");
+            String concepto = sc.nextLine();
+            double monto = leerDouble("Importe (EUR): ");
+
+            // Generación de ID único temporal para el gasto
+            String idGasto = "G-" + System.currentTimeMillis() % 1000;
+            misPisos.get(sel).registrarFactura(new Gasto(idGasto, concepto, monto));
+            gestor.guardarDatos();
+            System.out.println("Gasto registrado y cifrado correctamente.");
+        }
+    }
+
+    /**
+     * Muestra el balance pendiente del inquilino logueado.
+     */
+    private static void menuEstadoDeCuenta() {
+        Vivienda casa = gestor.getViviendaDeInquilino(gestor.getUsuarioIdentificado().getDni());
+        if (casa == null) {
+            System.out.println("[!] No constas como inquilino en ninguna vivienda.");
+            return;
+        }
+        System.out.println("\n--- ESTADO DE CUENTA ---");
+        System.out.println("Dirección: " + casa.getDireccion());
+        System.out.printf("TOTAL PENDIENTE: %.2f EUR\n", casa.calcularBalanceTotalPendiente());
+
+        // Posibilidad de liquidar suministros individuales
+        List<Gasto> pendientes = casa.getListaGastosPendientes();
+        if (!pendientes.isEmpty() && leerBoolean("¿Desea liquidar un suministro? (S/N): ")) {
+            for (int j = 0; j < pendientes.size(); j++) {
+                System.out.println((j+1) + ". " + pendientes.get(j).getConcepto() + " (" + pendientes.get(j).getMonto() + " EUR)");
+            }
+            int op = leerEntero("Seleccione número: ") - 1;
+            if (op >= 0 && op < pendientes.size()) {
+                pendientes.get(op).marcarComoPagado();
+                gestor.guardarDatos();
+                System.out.println("Pago registrado.");
+            }
+        }
     }
 
     /**
@@ -167,6 +243,9 @@ public class Habitly {
         } while (opcionUsuario != 6);
     }
 
+    /**
+     * Muestra las opciones del submenú de usuarios.
+     */
     private static void mostrarMenuUsuario() {
         System.out.println("\n========================================");
         System.out.println("    HABITLY - REGISTRO USUARIO");
@@ -180,6 +259,9 @@ public class Habitly {
         System.out.println("----------------------------------------");
     }
 
+    /**
+     * Registra un nuevo Propietario en el sistema.
+     */
     public static void registrarPropietario() {
         System.out.println("\n--- NUEVO REGISTRO DE PROPIETARIO ---");
         System.out.print("DNI/CIF: ");
@@ -205,6 +287,9 @@ public class Habitly {
         }
     }
 
+    /**
+     * Registra un nuevo Inquilino en el sistema.
+     */
     public static void registrarInquilino() {
         System.out.println("\n--- NUEVO REGISTRO DE INQUILINO ---");
         System.out.print("DNI: ");
@@ -230,15 +315,16 @@ public class Habitly {
         }
     }
 
+    /**
+     * Formulario para dar de alta una nueva vivienda vinculada al propietario actual.
+     */
     private static void registrarVivienda() {
-        System.out.println("\n--- NUEVO REGISTRO DE VIVIENDA ---");
-        System.out.print("DNI del Propietario: ");
-        String dniProp = sc.nextLine();
-
-        if (gestor.obtenerUsuario(dniProp) == null) {
-            System.out.println("Error: El DNI no existe.");
+        if (!(gestor.getUsuarioIdentificado() instanceof Propietario)) {
+            System.out.println("[!] Solo los propietarios pueden registrar viviendas.");
             return;
         }
+        System.out.println("\n--- NUEVO REGISTRO DE VIVIENDA ---");
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
 
         System.out.print("Dirección: ");
         String direccion = sc.nextLine();
@@ -252,20 +338,23 @@ public class Habitly {
         System.out.print("Conservación: ");
         String cons = sc.nextLine();
 
-        int tipo = leerEntero("¿Piso (1) o Casa (2)?: ");
+        int tipo = leerEntero("¿Tipo? Piso (1) o Casa (2): ");
         if (tipo == 1) {
             int planta = leerEntero("Planta: ");
             System.out.print("Puerta: ");
             String puerta = sc.nextLine();
-            gestor.añadirVivienda(new Piso(direccion, precio, m2, hab, banos, garaje, piscina, amueblado, cons, planta, puerta));
+            gestor.añadirVivienda(new Piso(dniProp, direccion, precio, m2, hab, banos, garaje, piscina, amueblado, cons, planta, puerta));
         } else {
             double parcela = leerDouble("Metros parcela: ");
-            gestor.añadirVivienda(new Casa(direccion, precio, m2, hab, banos, garaje, piscina, amueblado, cons, parcela));
+            gestor.añadirVivienda(new Casa(dniProp, direccion, precio, m2, hab, banos, garaje, piscina, amueblado, cons, parcela));
         }
         gestor.guardarDatos();
         System.out.println("Vivienda registrada con éxito.");
     }
 
+    /**
+     * Muestra el listado tabular de todas las viviendas en el sistema.
+     */
     private static void listarInventario() {
         if (gestor.estaVacio()) {
             System.out.println("El inventario está vacío.");
@@ -283,27 +372,38 @@ public class Habitly {
         }
     }
 
+    /**
+     * Registra un pago de renta parcial o total para una vivienda.
+     */
     private static void gestionarPago() {
         listarInventario();
         if (gestor.estaVacio()) return;
         int idx = leerEntero("Número de vivienda: ") - 1;
-        if (idx >= 0 && idx < gestor.tamañoInventario()) {
+        Vivienda v = gestor.obtenerVivienda(idx);
+        if (v != null) {
             double cuota = leerDouble("Cantidad a abonar: ");
-            gestor.obtenerVivienda(idx).registrarPago(cuota);
+            v.registrarPago(cuota);
             gestor.guardarDatos();
             System.out.println("Pago registrado.");
         }
     }
 
+    /**
+     * Aplica un incremento porcentual a la renta base de todas las viviendas.
+     */
     private static void aplicarIPCGeneral() {
         double porc = leerDouble("Porcentaje incremento: ");
         for (int i = 0; i < gestor.tamañoInventario(); i++) {
-            gestor.obtenerVivienda(i).aplicarSubidaAnual(porc);
+            Vivienda v = gestor.obtenerVivienda(i);
+            if (v != null) v.aplicarSubidaAnual(porc);
         }
         gestor.guardarDatos();
         System.out.println("IPC aplicado.");
     }
 
+    /**
+     * Muestra todos los usuarios registrados en el sistema.
+     */
     private static void listarUsuarios() {
         List<Usuario> lista = gestor.obtenerTodosLosUsuarios();
         System.out.println("\n------------------------------------------------------------");
@@ -313,6 +413,9 @@ public class Habitly {
         }
     }
 
+    /**
+     * Localiza y muestra la información de un usuario por su DNI.
+     */
     private static void buscarUsuario() {
         System.out.print("DNI a buscar: ");
         String dni = sc.nextLine();
@@ -321,6 +424,9 @@ public class Habitly {
         else System.out.println("No encontrado.");
     }
 
+    /**
+     * Elimina un usuario del sistema mediante su DNI.
+     */
     private static void eliminarUsuario() {
         System.out.print("DNI a eliminar: ");
         String dni = sc.nextLine();
@@ -350,6 +456,9 @@ public class Habitly {
         }
     }
 
+    /**
+     * Utilidad para leer enteros con control de excepciones.
+     */
     private static int leerEntero(String m) {
         while (true) {
             try {
@@ -364,6 +473,9 @@ public class Habitly {
         }
     }
 
+    /**
+     * Utilidad para leer decimales con control de excepciones.
+     */
     private static double leerDouble(String m) {
         while (true) {
             try {
@@ -378,6 +490,9 @@ public class Habitly {
         }
     }
 
+    /**
+     * Utilidad para leer confirmaciones booleanas S/N.
+     */
     private static boolean leerBoolean(String m) {
         while (true) {
             System.out.print(m);

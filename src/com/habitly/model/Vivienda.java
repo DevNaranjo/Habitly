@@ -1,15 +1,16 @@
 package com.habitly.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Representa una unidad inmobiliaria dentro del inventario.
  * Gestiona la lógica de precios, estado de ocupación y mantenimiento.
  * * @author DevNaranjo
- * @version 1.0.34
+ * @version 1.0.4
  * @since 1.0.0
  */
-
 public abstract class Vivienda implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -26,12 +27,14 @@ public abstract class Vivienda implements Serializable {
     private boolean tienePiscina;
     private boolean estaAmueblado;
 
-    /**
-     * Constructor principal para el modelo de vivienda.
-     * Inicializa el acumulador de pagos a cero.
-     */
-    public Vivienda(String direccion, double precioBase, double superficie, int habitaciones, int baños,
+    // Atributos v1.0.4
+    private String idPropietario;
+    private Usuario inquilino;
+    private ArrayList<Gasto> historialGastos;
+
+    public Vivienda(String idPropietario, String direccion, double precioBase, double superficie, int habitaciones, int baños,
                     boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado, String conservacion) {
+        this.idPropietario = idPropietario;
         this.direccion = direccion;
         this.precioBase = precioBase;
         this.superficie = superficie;
@@ -42,6 +45,8 @@ public abstract class Vivienda implements Serializable {
         this.estaAmueblado = estaAmueblado;
         this.conservacion = conservacion;
         this.totalPagadoMes = 0.0;
+        this.historialGastos = new ArrayList<>();
+        this.inquilino = null;
     }
 
     // --- GETTERS ---
@@ -56,73 +61,70 @@ public abstract class Vivienda implements Serializable {
     public String getConservacion() { return conservacion; }
     public double getTotalPagadoMes() { return totalPagadoMes; }
     public boolean isEstaAmueblado() { return estaAmueblado; }
+    public String getIdPropietario() { return idPropietario; }
+    public Usuario getInquilino() { return inquilino; }
+    public ArrayList<Gasto> getHistorialGastos() { return historialGastos; }
+
+    /**
+     * Calcula el precio por metro cuadrado
+     * @return double con el ratio euros/m2.
+     */
+    public double getPrecioMetroCuadrado() {
+        return (superficie > 0) ? precioBase / superficie : 0;
+    }
 
     // --- SETTERS ---
     public void setEstado(EstadoVivienda estado) { this.estado = estado; }
     public void setPrecioBase(double precioBase) { this.precioBase = precioBase; }
     public void setTienePiscina(boolean tienePiscina) { this.tienePiscina = tienePiscina; }
     public void setEstaAmueblado(boolean estaAmueblado) { this.estaAmueblado = estaAmueblado; }
+    public void setInquilino(Usuario inquilino) { this.inquilino = inquilino; }
 
-    // --- MÉTODOS DE LÓGICA DE NEGOCIO ---
+    // --- LÓGICA DE NEGOCIO ---
 
-    /**
-     * Registra un abono para la mensualidad actual.
-     * Si el pago se completa, la vivienda cambia automáticamente a ALQUILADA.
-     * @param cuota Cantidad a abonar.
-     */
+    public void registrarFactura(Gasto g) {
+        if (g != null) this.historialGastos.add(g);
+    }
+
     public void registrarPago(double cuota) {
-        if (this.estado == EstadoVivienda.VENDIDA) {
-            System.out.println("[!] Error: Vivienda vendida. No se admiten pagos.");
-            return;
-        }
-
         if (cuota > 0) {
             this.totalPagadoMes += cuota;
-
-            if (isPagadoCompleto() && this.estado == EstadoVivienda.DISPONIBLE) {
+            if (isPagadoComplete() && this.estado == EstadoVivienda.DISPONIBLE) {
                 this.estado = EstadoVivienda.ALQUILADA;
-                System.out.println("[SISTEMA] Pago completado. Estado actualizado a ALQUILADA.");
             }
         }
     }
 
-    /**
-     * Calcula el precio con impuestos. Debe ser implementado por subclases (Piso/Casa).
-     * @return Precio total con tasas.
-     */
-    public abstract double getPrecioFinalConImpuestos();
-
-    /**
-     * Calcula la deuda restante basándose en el precio con impuestos.
-     * @return Diferencia entre el precio total y lo ya pagado.
-     */
-    public double getPendienteDePago() {
-        double pendiente = getPrecioFinalConImpuestos() - totalPagadoMes;
-        return (pendiente < 0) ? 0 : pendiente; // Evita devolver valores negativos
-    }
-
-    /**
-     * Verifica si se ha cubierto el total del precio con impuestos.
-     */
-    public boolean isPagadoCompleto() {
-        return totalPagadoMes >= getPrecioFinalConImpuestos();
-    }
-
-    /**
-     * Actualiza el precio base aplicando el IPC.
-     * @param porcentaje Porcentaje de subida (ej. 3.0 para 3%).
-     */
     public void aplicarSubidaAnual(double porcentaje) {
         if (porcentaje != 0) {
             this.precioBase += (this.precioBase * porcentaje / 100);
         }
     }
 
-    /**
-     * Calcula la ratio de rentabilidad por superficie.
-     * @return Valor del metro cuadrado.
-     */
-    public double getPrecioMetroCuadrado() {
-        return (superficie > 0) ? (precioBase / superficie) : 0.0;
+    public double calcularBalanceTotalPendiente() {
+        double totalGastos = 0;
+        for (Gasto g : historialGastos) {
+            if (!g.isPagado()) totalGastos += g.getMonto();
+        }
+        return getPrecioFinalConImpuestos() + totalGastos;
+    }
+
+    public List<Gasto> getListaGastosPendientes() {
+        List<Gasto> pendientes = new ArrayList<>();
+        for (Gasto g : historialGastos) {
+            if (!g.isPagado()) pendientes.add(g);
+        }
+        return pendientes;
+    }
+
+    public abstract double getPrecioFinalConImpuestos();
+
+    public double getPendienteDePago() {
+        double pendiente = getPrecioFinalConImpuestos() - totalPagadoMes;
+        return (pendiente < 0) ? 0 : pendiente;
+    }
+
+    public boolean isPagadoComplete() {
+        return totalPagadoMes >= getPrecioFinalConImpuestos();
     }
 }
