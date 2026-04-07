@@ -7,11 +7,9 @@ import java.util.Scanner;
 
 /**
  * Clase principal que gestiona la interfaz de usuario (UI) de Habitly.
- * Coordina la interacción entre el usuario y el sistema de persistencia,
- * gestionando el flujo de navegación, la validación de entradas y la
- * seguridad basada en roles (Propietario, Inquilino e Invitado).
+ * Coordina la interacción entre el usuario y el sistema de persistencia.
  * * @author DevNaranjo
- * @version 1.0.4 (wip: Economy & persistence)
+ * @version 1.0.4
  * @since 1.0.0
  */
 public class Habitly {
@@ -21,6 +19,7 @@ public class Habitly {
 
     /**
      * Punto de entrada principal. Carga datos y gestiona el bucle de la aplicación.
+     * @param args Argumentos de línea de comandos.
      */
     public static void main(String[] args) {
         // Carga inicial de archivos binarios
@@ -111,8 +110,9 @@ public class Habitly {
         System.out.print("Introduzca su DNI para acceder: ");
         String dni = sc.nextLine();
 
-        Usuario u = gestor.obtenerUsuario(dni);
+        Usuario u = gestor.buscarPorDni(dni);
         if (u != null) {
+            // Guardamos el usuario encontrado en la sesión del gestor
             gestor.setUsuarioIdentificado(u);
             System.out.println("\nAcceso concedido. Bienvenido, " + u.getNombre());
         } else {
@@ -130,7 +130,7 @@ public class Habitly {
     }
 
     /**
-     * Muestra el menú principal de operaciones.
+     * Muestra el menú principal de operaciones adaptado al rol.
      */
     private static void mostrarMenu() {
         Usuario u = gestor.getUsuarioIdentificado();
@@ -159,6 +159,7 @@ public class Habitly {
      * Permite a un propietario vincular un nuevo gasto a una de sus propiedades.
      */
     private static void registrarGastoSuministro() {
+        // Filtramos para que solo vea sus propias viviendas
         List<Vivienda> misPisos = gestor.getViviendasPorDueño(gestor.getUsuarioIdentificado().getDni());
         if (misPisos.isEmpty()) {
             System.out.println("[!] No tienes viviendas registradas a tu nombre.");
@@ -185,7 +186,7 @@ public class Habitly {
     }
 
     /**
-     * Muestra el balance pendiente del inquilino logueado.
+     * Muestra el balance pendiente del inquilino logueado y permite liquidar suministros.
      */
     private static void menuEstadoDeCuenta() {
         Vivienda casa = gestor.getViviendaDeInquilino(gestor.getUsuarioIdentificado().getDni());
@@ -248,7 +249,7 @@ public class Habitly {
      */
     private static void mostrarMenuUsuario() {
         System.out.println("\n========================================");
-        System.out.println("    HABITLY - REGISTRO USUARIO");
+        System.out.println("    HABITLY - GESTIÓN USUARIOS");
         System.out.println("========================================");
         System.out.println("1. Registrar propietario");
         System.out.println("2. Registrar inquilino");
@@ -324,6 +325,7 @@ public class Habitly {
             return;
         }
         System.out.println("\n--- NUEVO REGISTRO DE VIVIENDA ---");
+        // Capturamos el DNI del dueño que está en sesión
         String dniProp = gestor.getUsuarioIdentificado().getDni();
 
         System.out.print("Dirección: ");
@@ -343,9 +345,11 @@ public class Habitly {
             int planta = leerEntero("Planta: ");
             System.out.print("Puerta: ");
             String puerta = sc.nextLine();
+            // Constructor de Piso con 12 parámetros
             gestor.añadirVivienda(new Piso(dniProp, direccion, precio, m2, hab, banos, garaje, piscina, amueblado, cons, planta, puerta));
         } else {
             double parcela = leerDouble("Metros parcela: ");
+            // Constructor de Casa con 11 parámetros
             gestor.añadirVivienda(new Casa(dniProp, direccion, precio, m2, hab, banos, garaje, piscina, amueblado, cons, parcela));
         }
         gestor.guardarDatos();
@@ -360,20 +364,16 @@ public class Habitly {
             System.out.println("El inventario está vacío.");
             return;
         }
-        System.out.println("\n==========================================================================================");
-        System.out.printf("%-3s | %-12s | %-15s | %-6s | %-4s | %-6s | %-8s%n", "ID", "ESTADO", "DIRECCIÓN", "TIPO", "M2", "EUR/M2", "EXTRAS");
-        System.out.println("------------------------------------------------------------------------------------------");
-
+        System.out.println("\nID | ESTADO | DIRECCIÓN | TIPO | M2 | EUR/M2");
         for (int i = 0; i < gestor.tamañoInventario(); i++) {
             Vivienda v = gestor.obtenerVivienda(i);
             String tipo = (v instanceof Piso) ? "Piso" : "Casa";
-            String extras = (v.isTieneGaraje() ? "G" : "-") + (v.isTienePiscina() ? "P" : "-") + (v.isEstaAmueblado() ? "A" : "-");
-            System.out.printf("%-3d | %-12s | %-15.15s | %-6s | %-4.0f | %-6.2f | [%-3s]%n", (i + 1), v.getEstado(), v.getDireccion(), tipo, v.getSuperficie(), v.getPrecioMetroCuadrado(), extras);
+            System.out.printf("%d | %s | %s | %s | %.0f | %.2f\n", (i+1), v.getEstado(), v.getDireccion(), tipo, v.getSuperficie(), v.getPrecioMetroCuadrado());
         }
     }
 
     /**
-     * Registra un pago de renta parcial o total para una vivienda.
+     * Registra un pago de renta para una vivienda seleccionada.
      */
     private static void gestionarPago() {
         listarInventario();
@@ -389,12 +389,11 @@ public class Habitly {
     }
 
     /**
-     * Aplica un incremento porcentual a la renta base de todas las viviendas.
+     * Aplica un incremento porcentual a la renta de todas las viviendas (IPC).
      */
     private static void aplicarIPCGeneral() {
         double porc = leerDouble("Porcentaje incremento: ");
-        for (int i = 0; i < gestor.tamañoInventario(); i++) {
-            Vivienda v = gestor.obtenerVivienda(i);
+        for (Vivienda v : gestor.getInventario()) {
             if (v != null) v.aplicarSubidaAnual(porc);
         }
         gestor.guardarDatos();
@@ -405,11 +404,8 @@ public class Habitly {
      * Muestra todos los usuarios registrados en el sistema.
      */
     private static void listarUsuarios() {
-        List<Usuario> lista = gestor.obtenerTodosLosUsuarios();
-        System.out.println("\n------------------------------------------------------------");
-        for (Usuario u : lista) {
-            String perfil = (u instanceof Propietario) ? "PROP" : "INQ";
-            System.out.printf("%-12s | %-20s | %-5s%n", u.getDni(), u.getNombre(), perfil);
+        for (Usuario u : gestor.obtenerTodosLosUsuarios()) {
+            System.out.printf("%s | %s [%s]\n", u.getDni(), u.getNombre(), (u instanceof Propietario ? "PROP" : "INQ"));
         }
     }
 
@@ -418,8 +414,7 @@ public class Habitly {
      */
     private static void buscarUsuario() {
         System.out.print("DNI a buscar: ");
-        String dni = sc.nextLine();
-        Usuario u = gestor.obtenerUsuario(dni);
+        Usuario u = gestor.obtenerUsuario(sc.nextLine());
         if (u != null) System.out.println("Encontrado: " + u.getNombre() + " (" + u.getEmail() + ")");
         else System.out.println("No encontrado.");
     }
@@ -429,8 +424,7 @@ public class Habitly {
      */
     private static void eliminarUsuario() {
         System.out.print("DNI a eliminar: ");
-        String dni = sc.nextLine();
-        if (gestor.eliminarUsuario(dni)) {
+        if (gestor.eliminarUsuario(sc.nextLine())) {
             gestor.guardarDatos();
             System.out.println("Usuario eliminado.");
         }
@@ -440,24 +434,19 @@ public class Habitly {
      * Realiza un borrado físico y lógico de los datos y cierra la aplicación.
      */
     private static void borrarDatosSistema() {
-        System.out.print("\n¿Confirmar borrado total? Esta acción es irreversible (SI): ");
-        String confirmacion = sc.nextLine().toUpperCase();
-
-        if (confirmacion.equals("SI")) {
+        System.out.print("\n¿Confirmar borrado total? (SI): ");
+        if (sc.nextLine().equalsIgnoreCase("SI")) {
             if (gestor.borrarDatosAplicacion()) {
-                System.out.println("\nEl sistema se ha reseteado correctamente.");
-                System.out.println("Cerrando aplicación de forma segura...");
+                System.out.println("\nSistema reseteado. Cerrando...");
                 System.exit(0);
-            } else {
-                System.out.println("\nERROR: No se pudo eliminar el archivo físico.");
             }
-        } else {
-            System.out.println("\n[!] Operación cancelada. Sus datos están a salvo.");
         }
     }
 
     /**
      * Utilidad para leer enteros con control de excepciones.
+     * @param m Mensaje a mostrar.
+     * @return Valor entero leído.
      */
     private static int leerEntero(String m) {
         while (true) {
@@ -468,13 +457,15 @@ public class Habitly {
                 return v;
             } catch (Exception e) {
                 sc.nextLine();
-                System.out.println("ERROR: Formato numérico incorrecto. Introduzca un número entero (ej: 12).");
+                System.out.println("ERROR: Formato numérico incorrecto.");
             }
         }
     }
 
     /**
      * Utilidad para leer decimales con control de excepciones.
+     * @param m Mensaje a mostrar.
+     * @return Valor double leído.
      */
     private static double leerDouble(String m) {
         while (true) {
@@ -485,13 +476,15 @@ public class Habitly {
                 return v;
             } catch (Exception e) {
                 sc.nextLine();
-                System.out.println("ERROR: Formato decimal incorrecto. Use la coma (ej: 1200,50).");
+                System.out.println("ERROR: Formato decimal incorrecto.");
             }
         }
     }
 
     /**
      * Utilidad para leer confirmaciones booleanas S/N.
+     * @param m Mensaje a mostrar.
+     * @return true si es 'S', false si es 'N'.
      */
     private static boolean leerBoolean(String m) {
         while (true) {
@@ -499,7 +492,7 @@ public class Habitly {
             String in = sc.nextLine().trim().toUpperCase();
             if (in.equals("S")) return true;
             if (in.equals("N")) return false;
-            System.out.println("ERROR: Por favor, responda con 'S' para Sí o 'N' para No.");
+            System.out.println("ERROR: Use S o N.");
         }
     }
 }
