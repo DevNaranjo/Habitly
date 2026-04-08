@@ -1,20 +1,20 @@
 # 🏠 Habitly - Property Management System (v1.0.5)
 
-**Habitly** es una aplicación CLI profesional desarrollada en Java para la gestión integral de activos inmobiliarios. En su **versión 1.0.5**, el sistema evoluciona hacia el cumplimiento legal (**Compliance**), integrando motores de validación de la Ley de Vivienda y el control de rentas en zonas tensionadas.
+**Habitly** is a professional Java-based CLI application designed for comprehensive real estate asset management. In **version 1.0.5**, the system evolves towards **Legal Compliance**, integrating validation engines for Housing Laws and rent control in stressed markets.
 
 ---
 
 ## 🚀 Key Features (v1.0.5 - Legal Compliance & Business Logic)
 
-* **⚖️ Compliance Legal (Ley 12/2023):** Implementación del índice **IRAV**. El sistema bloquea automáticamente cualquier contrato que supere el límite legal de renta mensual establecido para la vivienda.
-* **📜 Motor de Contratación LAU:** Nueva entidad `ContratoAlquiler` que valida automáticamente la duración mínima legal según el **Art. 9 de la LAU**:
-    * **Personas Físicas:** Mínimo 5 años (60 meses).
-    * **Personas Jurídicas:** Mínimo 7 años (84 meses).
-* **🇮🇨 Fiscalidad Canaria (IGIC):** Núcleo financiero optimizado para el archipiélago, con cálculo automático del **7% de IGIC** y redondeo de precisión financiera.
-* **🏦 Control de Fianzas (ICAVI):** Sistema de rastreo para detectar depósitos de fianza pendientes ante los organismos oficiales, garantizando que el propietario cumpla con sus obligaciones legales.
-* **🔐 Seguridad AES-128:** Persistencia profesional mediante cifrado **AES de 128 bits**. Los datos se almacenan en un binario cifrado (`sistema.dat`), protegiendo la privacidad de propietarios e inquilinos.
-* **🏗️ Modelado de Activos Especializado:** Distinción arquitectónica estricta entre **Pisos** (gestión de planta/puerta) y **Casas** (gestión de parcelas y exteriores).
-* **🧪 Suite de Auditoría Legal:** Incluye el nuevo `ValidadorLegalCompliance` diseñado para auditar la integridad del sistema ante inspecciones de normativa de vivienda.
+* **⚖️ Legal Compliance (Law 12/2023):** Implementation of the **IRAV index**. The system automatically blocks any contract that exceeds the legal monthly rent limit established for the property.
+* **📜 LAU Contract Engine:** New `ContratoAlquiler` entity that automatically validates the minimum legal duration according to **Art. 9 of the LAU**:
+    * **Natural Persons:** Minimum 5 years (60 months).
+    * **Legal Entities (Companies):** Minimum 7 years (84 months).
+* **🇮🇨 Canary Islands Taxation (IGIC):** Optimized financial core for the archipelago, featuring automatic **7% IGIC** calculation and financial-grade precision rounding.
+* **🏦 Security Deposit Control (ICAVI):** Tracking system to detect pending security deposits with official bodies, ensuring the owner meets all legal obligations.
+* **🔐 AES-128 Persistence:** Professional-grade persistence via **128-bit AES encryption**. Data is stored in an encrypted binary file (`sistema.dat`), protecting owner and tenant privacy.
+* **🏗️ Specialized Asset Modeling:** Strict architectural distinction between **Pisos** (floor/door management) and **Casas** (plot and outdoor management).
+* **🧪 Legal Audit Suite:** Includes the new `ValidadorLegalCompliance` designed to audit system integrity against housing regulation inspections.
 
 ---
 
@@ -35,31 +35,31 @@
 
 ## 🏗️ Architecture & Patterns
 
-El proyecto sigue estándares de código limpio (*Clean Code*) y patrones de diseño profesionales:
+The project follows **Clean Code** standards and professional design patterns:
 
-* **Manager Pattern:** Lógica centralizada en `GestorInventario`, que ahora actúa como "Gatekeeper" legal para todas las transacciones de alquiler.
-* **Persistence Layer:** Uso de `CajaFuerte` & `CryptoManager` para serialización segura y cifrado simétrico en las operaciones de E/S.
-* **Hierarchy & Polymorphism:** Estructura de clases abstractas para `Vivienda` y `Usuario`, permitiendo un comportamiento dinámico basado en roles y tipos de propiedad.
-* **Traceability:** Documentación **Javadoc** completa en español, con control de versiones `@version 1.0.5` y trazabilidad de cambios por autor.
+* **Manager Pattern:** Centralized logic handled by `GestorInventario`, which now acts as a legal "Gatekeeper" for all rental transactions.
+* **Persistence Layer:** Uses `CajaFuerte` & `CryptoManager` for secure serialization and symmetric encryption for I/O operations.
+* **Hierarchy & Polymorphism:** Abstract class structure for `Vivienda` and `Usuario`, allowing dynamic behavior based on roles and property types.
+* **Traceability:** Full documentation using **Javadoc**, with `@version 1.0.5` control and author-based change traceability.
 
 ---
 
 ## 🔒 Security & Legal Logic
 
-La integridad de los datos y la seguridad jurídica son los pilares de Habitly:
+Data integrity and legal certainty are the core pillars of Habitly:
 
-1.  **Validación de Renta:** El sistema cruza en tiempo real el precio base propuesto con el límite **IRAV** almacenado en el perfil de la vivienda.
-2.  **RBAC (Role-Based Access Control):** La interfaz se transforma según el rol detectado en la sesión. Solo los propietarios pueden gestionar el inventario y perfiles, mientras que los inquilinos acceden a su estado de cuenta y liquidación de suministros.
-3.  **Data Protection:** Toda la base de datos se cifra antes de ser escrita en disco, cumpliendo con estándares de protección de información sensible y evitando la lectura externa de `sistema.dat`.
+1.  **Rent Validation:** The system performs real-time checks between the proposed base price and the **IRAV limit** stored in the property profile.
+2.  **RBAC (Role-Based Access Control):** The interface adapts based on the detected session role. Only owners can manage inventory and profiles, while tenants access their account statements and utility bill settlements.
+3.  **Data Protection:** The entire database is encrypted before being written to disk, complying with sensitive information protection standards and preventing external reading of `sistema.dat`.
 
 ---
 
-## 🧪 Testing de Cumplimiento (Compliance QA)
+## 🧪 Compliance QA Testing
 
-Para asegurar la estabilidad legal, la v1.0.5 incluye tests automáticos que verifican:
-* Bloqueo de rentas abusivas (IRAV).
-* Validación de prórrogas legales automáticas según arrendador.
-* Detección de contratos sin fianza confirmada en el ICAVI.
+To ensure legal stability, v1.0.5 includes automated tests that verify:
+* Blocking of abusive rents (IRAV).
+* Validation of automatic legal renewals based on the landlord type.
+* Detection of contracts without confirmed security deposits in ICAVI.
 
 ---
 
