@@ -1,7 +1,9 @@
 package com.habitly.data;
 
+import com.habitly.model.EstadoVivienda;
 import com.habitly.model.Usuario;
 import com.habitly.model.Vivienda;
+import com.habitly.model.ContratoAlquiler;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,20 +13,17 @@ import java.util.List;
  * Motor central de lógica de negocio y persistencia.
  * Coordina las colecciones de datos en memoria con el almacenamiento seguro
  * en disco mediante cifrado AES.
- * * @author DevNaranjo
- * @version 1.0.34
+ * v1.0.5: Añade soporte para cumplimiento legal (Etapa 5) y mantiene retrocompatibilidad.
+ * @author DevNaranjo
+ * @version 1.0.5
  * @since 1.0.0
  */
-
 public class GestorInventario {
 
     private ArrayList<Vivienda> inventario;
     private HashMap<String, Usuario> usuarios;
-
-    // Atributo específico para gestionar la sesión activa (v1.0.33)
     private Usuario usuarioIdentificado;
 
-    //Definimos la carpeta y la ruta usando el separador del sistema (v1.0.33)
     private final String CARPETA_DATA = "data";
     private final String RUTA_SISTEMA = CARPETA_DATA + File.separator + "sistema.dat";
 
@@ -34,45 +33,33 @@ public class GestorInventario {
         this.usuarioIdentificado = null;
     }
 
-// --- MÉTODOS DE PERSISTENCIA ACTUALIZADOS ---
+    // --- MÉTODOS DE PERSISTENCIA ---
 
     /**
      * Serializa el inventario y los usuarios, aplica cifrado AES-128
-     * y guarda el resultado en el repositorio local dentro de /data.
+     * y guarda el resultado en el repositorio local.
      */
     public void guardarDatos() {
         try {
             File directorio = new File(CARPETA_DATA);
-
-            // Creamos la carpeta si no existe antes de guardar
             if (!directorio.exists()) {
                 directorio.mkdirs();
             }
-
-            // Empaquetamos los datos en la clase contenedor
             CajaFuerte maleta = new CajaFuerte(this.inventario, this.usuarios);
-
-            // Ciframos y guardamos usando la ruta multiplataforma
             CryptoManager.guardarObjetoCifrado(maleta, RUTA_SISTEMA);
-
         } catch (Exception e) {
-            // Importante: No solo mostrar el mensaje, a veces conviene ver la traza
             System.err.println("Error crítico al cifrar los datos: " + e.getMessage());
         }
     }
 
     /**
      * Recupera y descifra el archivo de sistema desde /data.
-     * Verifica existencia y tamaño para evitar excepciones de flujo.
      */
     public void cargarDatos() {
         File archivo = new File(RUTA_SISTEMA);
-
-        // Verificación de robustez: ¿Existe y tiene contenido?
         if (archivo.exists() && archivo.length() > 0) {
             try {
                 Object cargado = CryptoManager.leerObjetoCifrado(RUTA_SISTEMA);
-
                 if (cargado instanceof CajaFuerte maleta) {
                     if (maleta.listaViviendas != null) this.inventario = maleta.listaViviendas;
                     if (maleta.mapaUsuarios != null) this.usuarios = maleta.mapaUsuarios;
@@ -80,45 +67,100 @@ public class GestorInventario {
             } catch (Exception e) {
                 System.err.println("[!] Error al descifrar el archivo de datos.");
             }
-        } else {
-            // No hay error, simplemente es la primera vez que se usa la app
-            System.out.println("[Habitly] Iniciando sistema nuevo (Base de datos vacía).");
         }
     }
 
     /**
-     * Borrado de fábrica: Limpia la memoria RAM y elimina el archivo físico en /data.
-     * v1.0.34 Patch: Refuerzo de limpieza de sesión.
-     * @return true si el archivo se eliminó o no existía, false si hubo un error de bloqueo.
+     * Borrado de fábrica: Limpia la memoria RAM y elimina el archivo físico.
+     * @return true si se eliminó correctamente.
      */
     public boolean borrarDatosAplicacion() {
-        //Limpiamos la memoria RAM
         this.inventario.clear();
         this.usuarios.clear();
         this.usuarioIdentificado = null;
-
-        //Intentamos borrar el archivo físico
         File archivo = new File(RUTA_SISTEMA);
-
         if (archivo.exists()) {
             return archivo.delete();
         }
-        return true; // Si no existe, el objetivo se cumple.
+        return true;
     }
 
-    // --- MÉTODOS DE FILTRADO ECONÓMICO (v1.0.4) ---
+    // --- MÉTODOS DE COMPATIBILIDAD ---
+
+    /** @return true si el inventario de viviendas está vacío. */
+    public boolean estaVacio() {
+        return inventario.isEmpty();
+    }
+
+    /** @return Cantidad de viviendas registradas. */
+    public int tamañoInventario() {
+        return inventario.size();
+    }
 
     /**
-     * Filtra el inventario para devolver solo las viviendas que pertenecen al dueño actual.
-     * @param idDueño El DNI del propietario (procedente de usuarioIdentificado).
-     * @return Lista de viviendas vinculadas al propietario.
+     * Obtiene una vivienda según su índice en el ArrayList.
+     * @param index Posición de la vivienda.
+     * @return Objeto Vivienda o null si el índice es inválido.
      */
+    public Vivienda obtenerVivienda(int index) {
+        if (index >= 0 && index < inventario.size()) {
+            return inventario.get(index);
+        }
+        return null;
+    }
+
+    /**
+     * Elimina un usuario del sistema.
+     * @param dni Identificador del usuario.
+     * @return true si se eliminó con éxito.
+     */
+    public boolean eliminarUsuario(String dni) {
+        if (usuarios.containsKey(dni)) {
+            usuarios.remove(dni);
+            return true;
+        }
+        return false;
+    }
+
+    // --- MÉTODOS DE LÓGICA DE NEGOCIO (ETAPA 5) ---
+
+    /**
+     * Formaliza legalmente un contrato vinculándolo a una vivienda.
+     * Valida disponibilidad y cumplimiento del índice IRAV.
+     */
+    public String formalizarContrato(ContratoAlquiler contrato, Vivienda vivienda) {
+        if (vivienda.getEstado() != EstadoVivienda.DISPONIBLE) {
+            return "ERROR: La vivienda no está disponible para alquiler.";
+        }
+        if (contrato.getRentaMensual() > vivienda.getLimiteMaximoIrav()) {
+            return "ERROR LEGAL: La renta propuesta supera el límite máximo del índice IRAV ("
+                    + vivienda.getLimiteMaximoIrav() + "€).";
+        }
+
+        vivienda.setContratoActivo(contrato);
+        vivienda.setInquilino(buscarPorDni(contrato.getDniInquilino()));
+        vivienda.setEstado(EstadoVivienda.ALQUILADA);
+        guardarDatos();
+        return "ÉXITO: Contrato formalizado.";
+    }
+
+    /** @return Lista de contratos con fianzas pendientes de depósito legal (ICAVI). */
+    public List<ContratoAlquiler> obtenerContratosPendientesFianza() {
+        List<ContratoAlquiler> pendientes = new ArrayList<>();
+        for (Vivienda v : inventario) {
+            if (v.getContratoActivo() != null && !v.getContratoActivo().isFianzaDepositada()) {
+                pendientes.add(v.getContratoActivo());
+            }
+        }
+        return pendientes;
+    }
+
+    // --- MÉTODOS DE FILTRADO Y CONSULTA ---
+
+    /** @return Lista de viviendas que pertenecen a un propietario concreto. */
     public List<Vivienda> getViviendasPorDueño(String idDueño) {
         List<Vivienda> filtradas = new ArrayList<>();
-
-        // Usamos 'inventario' que es tu ArrayList global
         for (Vivienda v : inventario) {
-            // IMPORTANTE: Vivienda debe tener el atributo idPropietario
             if (v.getIdPropietario() != null && v.getIdPropietario().equals(idDueño)) {
                 filtradas.add(v);
             }
@@ -126,15 +168,9 @@ public class GestorInventario {
         return filtradas;
     }
 
-    /**
-     * Localiza la vivienda donde reside el inquilino que ha iniciado sesión.
-     * @param idInquilino El DNI del inquilino actual.
-     * @return La vivienda asignada o null si no tiene contrato activo.
-     */
+    /** @return Vivienda donde reside el inquilino especificado. */
     public Vivienda getViviendaDeInquilino(String idInquilino) {
         for (Vivienda v : inventario) {
-            // Verificamos que la vivienda tenga un inquilino asignado
-            // y que el DNI coincida con el del usuario en sesión
             if (v.getInquilino() != null && v.getInquilino().getDni().equals(idInquilino)) {
                 return v;
             }
@@ -144,87 +180,33 @@ public class GestorInventario {
 
     // --- MÉTODOS DE LÓGICA DE USUARIOS ---
 
-    /**
-     * Registra un nuevo usuario validando que el DNI no esté duplicado.
-     * @param nuevoUsuario Objeto usuario a añadir.
-     * @return true si se añadió, false si el DNI ya existe.
-     */
     public boolean añadirUsuario(Usuario nuevoUsuario) {
-        if (nuevoUsuario == null) return false;
-
-        String dni = nuevoUsuario.getDni();
-        if (usuarios.containsKey(dni)) {
-            return false;
-        } else {
-            usuarios.put(dni, nuevoUsuario);
-            return true;
-        }
+        if (nuevoUsuario == null || usuarios.containsKey(nuevoUsuario.getDni())) return false;
+        usuarios.put(nuevoUsuario.getDni(), nuevoUsuario);
+        return true;
     }
 
     public Usuario obtenerUsuario(String dni) {
         return usuarios.get(dni);
     }
 
-    public boolean eliminarUsuario(String dni) {
-        return usuarios.remove(dni) != null;
-    }
+    public void setUsuarioIdentificado(Usuario u) { this.usuarioIdentificado = u; }
 
-    /**
-     * Establece el usuario que ha iniciado sesión en la ejecución actual.
-     * @param usuarioIdentificado Usuario validado.
-     */
-    public void setUsuarioIdentificado(Usuario usuarioIdentificado) {
-        this.usuarioIdentificado = usuarioIdentificado;
-    }
+    public Usuario getUsuarioIdentificado() { return usuarioIdentificado; }
 
-    /**
-     * Retorna una lista de todos los usuarios registrados.
-     * @return List de usuarios (ArrayList).
-     */
     public List<Usuario> obtenerTodosLosUsuarios() {
-        if (usuarios == null) return new ArrayList<>();
         return new ArrayList<>(usuarios.values());
     }
 
-    // --- MÉTODOS DE LÓGICA DE VIVIENDAS ---
-
     public void añadirVivienda(Vivienda v) {
         if (v != null) inventario.add(v);
-    }
-
-    public boolean estaVacio() {
-        return inventario.isEmpty();
-    }
-
-    public int tamañoInventario() {
-        return inventario.size();
-    }
-
-    public Vivienda obtenerVivienda(int indice) {
-        if (indice >= 0 && indice < inventario.size()) {
-            return inventario.get(indice);
-        }
-        return null;
     }
 
     public ArrayList<Vivienda> getInventario() {
         return inventario;
     }
 
-    /**
-     * Obtiene el usuario que tiene la sesión activa.
-     * @return Usuario identificado o null si es invitado/no logueado.
-     */
-    public Usuario getUsuarioIdentificado() {
-        return usuarioIdentificado;
-    }
-
-    /**
-     * Busca un usuario por DNI dentro del mapa de registros.
-     * @param dni Cadena con el DNI/CIF.
-     * @return El usuario encontrado o null.
-     */
     public Usuario buscarPorDni(String dni) {
-        return usuarios.getOrDefault(dni, null);
+        return usuarios.get(dni);
     }
 }

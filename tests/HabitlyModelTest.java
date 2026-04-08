@@ -1,6 +1,5 @@
-package com.habitly.model;
-
-import java.util.ArrayList;
+import com.habitly.model.Casa;
+import com.habitly.model.Piso;
 
 /**
  * Test Integral de Modelos Habitly v1.0.4

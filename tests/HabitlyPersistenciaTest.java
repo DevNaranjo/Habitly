@@ -1,5 +1,3 @@
-package com.habitly.test;
-
 import com.habitly.data.GestorInventario;
 import com.habitly.model.*;
 import java.io.File;

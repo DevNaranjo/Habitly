@@ -77,7 +77,7 @@ public class Habitly {
      */
     private static void mostrarAsistenteInicial() {
         System.out.println("\n========================================");
-        System.out.println("       BIENVENIDO A HABITLY v1.0.4");
+        System.out.println("       BIENVENIDO A HABITLY v1.0.5");
         System.out.println("========================================");
         System.out.println("1. Registrarme como PROPIETARIO");
         System.out.println("2. Registrarme como INQUILINO");

@@ -1,5 +1,3 @@
-package com.habitly.tests;
-
 import com.habitly.data.GestorInventario;
 import com.habitly.model.Propietario;
 

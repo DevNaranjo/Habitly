@@ -1,5 +1,3 @@
-package com.habitly.test;
-
 import com.habitly.model.*;
 
 /**
