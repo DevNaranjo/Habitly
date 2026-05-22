@@ -7,7 +7,7 @@ import java.time.LocalDate;
  * Representa un gasto o factura individual asociada a una propiedad.
  * Esta clase gestiona la integridad del monto y el estado de pago.
  * * @author DevNaranjo
- * @version 1.0.4
+ * @version 1.0.6
  * @since 1.0.4
  */
 public class Gasto implements Serializable {

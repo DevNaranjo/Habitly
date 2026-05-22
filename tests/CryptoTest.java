@@ -2,7 +2,7 @@ import com.habitly.data.CryptoManager;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Test de integridad para el motor de cifrado AES-128 de Habitly v1.0.3.
+ * Test de integridad para el motor de cifrado AES-128 de Habitly v1.0.6.
  */
 public class CryptoTest {
     public static void main(String[] args) {

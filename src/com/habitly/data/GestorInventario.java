@@ -4,10 +4,13 @@ import com.habitly.model.EstadoVivienda;
 import com.habitly.model.Usuario;
 import com.habitly.model.Vivienda;
 import com.habitly.model.ContratoAlquiler;
+import com.habitly.model.Gasto;
+import com.habitly.model.TipoArrendador;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.time.LocalDate;
 
 /**
  * Motor central de lógica de negocio y persistencia.
@@ -15,7 +18,7 @@ import java.util.List;
  * en disco mediante cifrado AES.
  * v1.0.5: Añade soporte para cumplimiento legal (Etapa 5) y mantiene retrocompatibilidad.
  * @author DevNaranjo
- * @version 1.0.5
+ * @version 1.0.6
  * @since 1.0.0
  */
 public class GestorInventario {
@@ -126,7 +129,7 @@ public class GestorInventario {
 
     /**
      * Formaliza legalmente un contrato vinculándolo a una vivienda.
-     * Valida disponibilidad y cumplimiento del índice IRAV.
+     * Valida disponibilidad, duración legal, límites IRAV y límites de fianza/garantías adicionales.
      */
     public String formalizarContrato(ContratoAlquiler contrato, Vivienda vivienda) {
         if (vivienda.getEstado() != EstadoVivienda.DISPONIBLE) {
@@ -136,12 +139,92 @@ public class GestorInventario {
             return "ERROR LEGAL: La renta propuesta supera el límite máximo del índice IRAV ("
                     + vivienda.getLimiteMaximoIrav() + "€).";
         }
+        if (!contrato.cumpleDuracionMinimaLegal()) {
+            int minimoRequerido = (contrato.getTipoArrendador() == TipoArrendador.FISICO) ? 60 : 84;
+            return "ERROR LEGAL: Duración insuficiente. La ley exige un mínimo de " + minimoRequerido + " meses.";
+        }
+        if (!contrato.validarFianzaLegal()) {
+            return "ERROR LEGAL: El importe de la fianza debe ser exactamente 1 mes de renta y las garantías adicionales no pueden superar las 2 mensualidades.";
+        }
 
         vivienda.setContratoActivo(contrato);
-        vivienda.setInquilino(buscarPorDni(contrato.getDniInquilino()));
+        vivienda.setInquilino(obtenerUsuario(contrato.getDniInquilino()));
         vivienda.setEstado(EstadoVivienda.ALQUILADA);
         guardarDatos();
         return "ÉXITO: Contrato formalizado.";
+    }
+
+    /**
+     * Recorre todos los contratos activos y actualiza su renta mensual según el porcentaje IRAV.
+     * @param porcentajeIrav Porcentaje del índice de actualización de renta.
+     * @return El número de contratos actualizados.
+     */
+    public int aplicarActualizacionAnualIRAV(double porcentajeIrav) {
+        return aplicarActualizacionAnualIRAV(porcentajeIrav, false);
+    }
+
+    /**
+     * Recorre todos los contratos activos y actualiza su renta mensual según el porcentaje IRAV,
+     * permitiendo forzar la actualización para pruebas o simulaciones.
+     * @param porcentajeIrav Porcentaje del índice de actualización de renta.
+     * @param forzar true si se desea forzar la actualización sin importar la fecha de aniversario.
+     * @return El número de contratos actualizados.
+     */
+    public int aplicarActualizacionAnualIRAV(double porcentajeIrav, boolean forzar) {
+        int actualizados = 0;
+        for (Vivienda v : inventario) {
+            if (v.getContratoActivo() != null && v.getContratoActivo().estaVigente()) {
+                if (v.getContratoActivo().aplicarActualizacionIRAV(porcentajeIrav, forzar)) {
+                    actualizados++;
+                }
+            }
+        }
+        if (actualizados > 0) {
+            guardarDatos();
+        }
+        return actualizados;
+    }
+
+    /**
+     * Recorre los contratos activos de un propietario y actualiza su renta según el porcentaje IRAV.
+     * @param dniPropietario DNI del propietario.
+     * @param porcentajeIrav Porcentaje del índice de actualización de renta.
+     * @param forzar true si se desea forzar la actualización.
+     * @return El número de contratos actualizados.
+     */
+    public int aplicarActualizacionAnualIRAV(String dniPropietario, double porcentajeIrav, boolean forzar) {
+        int actualizados = 0;
+        for (Vivienda v : getViviendasPorDueño(dniPropietario)) {
+            if (v.getContratoActivo() != null && v.getContratoActivo().estaVigente()) {
+                if (v.getContratoActivo().aplicarActualizacionIRAV(porcentajeIrav, forzar)) {
+                    actualizados++;
+                }
+            }
+        }
+        if (actualizados > 0) {
+            guardarDatos();
+        }
+        return actualizados;
+    }
+
+    /**
+     * Obtiene una lista de contratos cuya fecha de vencimiento está próxima a vencer.
+     * @param diasMargen Días de margen para alertar.
+     * @return Lista de contratos próximos a vencer.
+     */
+    public List<ContratoAlquiler> obtenerContratosProximosAVencer(int diasMargen) {
+        List<ContratoAlquiler> proximos = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+        LocalDate limite = hoy.plusDays(diasMargen);
+        for (Vivienda v : inventario) {
+            if (v.getContratoActivo() != null && v.getContratoActivo().estaVigente()) {
+                LocalDate vto = v.getContratoActivo().getFechaVencimiento();
+                if (vto != null && (vto.isEqual(hoy) || (vto.isAfter(hoy) && vto.isBefore(limite.plusDays(1))))) {
+                    proximos.add(v.getContratoActivo());
+                }
+            }
+        }
+        return proximos;
     }
 
     /** @return Lista de contratos con fianzas pendientes de depósito legal (ICAVI). */
@@ -206,7 +289,38 @@ public class GestorInventario {
         return inventario;
     }
 
-    public Usuario buscarPorDni(String dni) {
-        return usuarios.get(dni);
+    /**
+     * Calcula el beneficio neto de un propietario: ingresos cobrados - gastos registrados.
+     * @param dniPropietario DNI del propietario.
+     * @return double con el beneficio neto.
+     */
+    public double getBeneficioTotal(String dniPropietario) {
+        double ingresos = 0;
+        double gastos = 0;
+        for (Vivienda v : getViviendasPorDueño(dniPropietario)) {
+            ingresos += v.getTotalPagadoMes();
+            for (Gasto g : v.getHistorialGastos()) {
+                gastos += g.getMonto();
+            }
+        }
+        return ingresos - gastos;
+    }
+
+    /**
+     * Elimina una vivienda del inventario según su índice.
+     * La vivienda solo se puede eliminar si está en estado DISPONIBLE.
+     * @param index Posición de la vivienda en el inventario.
+     * @return true si se eliminó con éxito, false en caso contrario.
+     */
+    public boolean eliminarVivienda(int index) {
+        if (index >= 0 && index < inventario.size()) {
+            Vivienda v = inventario.get(index);
+            if (v.getEstado() == EstadoVivienda.DISPONIBLE) {
+                inventario.remove(index);
+                guardarDatos();
+                return true;
+            }
+        }
+        return false;
     }
 }

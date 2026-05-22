@@ -2,12 +2,12 @@ import com.habitly.model.*;
 import java.util.List;
 
 /**
- * Test de Lógica de Negocio v1.0.4
+ * Test de Lógica de Negocio v1.0.6
  * Prueba la interacción entre Usuarios, Viviendas y Gastos.
  */
 public class HabitlyLogicTest {
     public static void main(String[] args) {
-        System.out.println("=== TEST DE LÓGICA HABITLY v1.0.4 ===");
+        System.out.println("=== TEST DE LÓGICA HABITLY v1.0.6 ===");
 
         // 1. ESCENARIO: Un Propietario registra un Piso y un Inquilino se muda
         Propietario prop = new Propietario("11122233X", "Luis Dueño", 600111222, "luis@mail.com", false);
@@ -23,7 +23,7 @@ public class HabitlyLogicTest {
         System.out.println("\n--- ESTADO INICIAL ---");
         System.out.println("Vivienda: " + piso.getDireccion());
         System.out.println("Inquilino asignado: " + piso.getInquilino().getNombre());
-        System.out.println("Precio con IGIC (7%): " + piso.getPrecioFinalConImpuestos() + "€");
+        System.out.println("Precio con IGIC (Exento): " + piso.getPrecioFinalConImpuestos() + "€");
 
         // 3. ECONOMÍA: Registro de suministros (Gastos v1.0.4)
         // Simulamos una factura de luz de 120€ y una de agua de 30€
@@ -31,10 +31,10 @@ public class HabitlyLogicTest {
         piso.registrarFactura(new Gasto("AGUA-ABRIL", "Factura Agua", 30.0));
 
         // 4. VERIFICACIÓN DE BALANCE
-        // Renta con IGIC: 900 * 1.07 = 963.0
+        // Renta exenta de IGIC: 900.0
         // Gastos: 120 + 30 = 150.0
-        // Total esperado: 1113.0
-        double balanceEsperado = 1113.0;
+        // Total esperado: 1050.0
+        double balanceEsperado = 1050.0;
         double balanceCalculado = piso.calcularBalanceTotalPendiente();
 
         System.out.println("\n--- PRUEBA DE BALANCES ---");
@@ -49,8 +49,8 @@ public class HabitlyLogicTest {
         piso.registrarPago(500.0); // Ana paga 500€
         double pendiente = piso.getPendienteDePago();
 
-        // El pendiente solo cuenta la Renta con IGIC (963 - 500 = 463)
-        if (Math.abs(pendiente - 463.0) < 0.01) {
+        // El pendiente solo cuenta la Renta exenta de IGIC (900 - 500 = 400.0)
+        if (Math.abs(pendiente - 400.0) < 0.01) {
             System.out.println("✅ OK: Pago parcial registrado. Pendiente de renta: " + pendiente + "€");
         } else {
             System.out.println("❌ ERROR: El cálculo del pendiente es incorrecto: " + pendiente);
@@ -65,6 +65,6 @@ public class HabitlyLogicTest {
         }
 
         System.out.println("\n=============================================");
-        System.out.println("RESULTADO: Lógica v1.0.4 validada correctamente.");
+        System.out.println("RESULTADO: Lógica v1.0.6 validada correctamente.");
     }
 }

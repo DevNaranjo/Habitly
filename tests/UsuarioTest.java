@@ -1,12 +1,12 @@
 import com.habitly.model.*;
 
 /**
- * Test de Integridad de Usuarios v1.0.4
+ * Test de Integridad de Usuarios v1.0.6
  * Verifica la jerarquía: Usuario -> Inquilino / Propietario
  */
 public class UsuarioTest {
     public static void main(String[] args) {
-        System.out.println("=== UNIT TEST: MODELO DE USUARIOS v1.0.4 ===");
+        System.out.println("=== UNIT TEST: MODELO DE USUARIOS v1.0.6 ===");
 
         // 1. Crear un Inquilino (DNI, Nombre, Teléfono, Email, Solvencia)
         Inquilino inq = new Inquilino("12345678X", "Juan Prueba", 600123456, "juan@mail.com", 85);

@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Especialización de vivienda para inmuebles independientes.
  * Gestiona atributos de superficie de terreno y áreas exteriores privadas.
  * * @author DevNaranjo
- * @version 1.0.4
+ * @version 1.0.6
  * @since 1.0.0
  */
 public class Casa extends Vivienda implements Serializable {
@@ -45,13 +45,14 @@ public class Casa extends Vivienda implements Serializable {
     // --- LÓGICA DE NEGOCIO ---
 
     /**
-     * Calcula el precio final de la mensualidad de la casa aplicando el IGIC (7%).
-     * Se aplica un redondeo a dos decimales para garantizar la precisión en los tests.
-     * @return double con el precio final (Base + 7% IGIC).
+     * Calcula el precio final de la mensualidad de la casa.
+     * Según la legislación de Canarias para 2026, el arrendamiento de vivienda habitual 
+     * está exento de IGIC, por lo que se devuelve el precio base sin impuestos adicionales.
+     * @return double con el precio final (Base, exento de IGIC).
      */
     @Override
     public double getPrecioFinalConImpuestos() {
-        return Math.round((getPrecioBase() * 1.07) * 100.0) / 100.0;
+        return Math.round(getPrecioBase() * 100.0) / 100.0;
     }
 
     // --- GETTERS ---

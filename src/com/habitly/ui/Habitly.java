@@ -2,14 +2,16 @@ package com.habitly.ui;
 
 import com.habitly.data.GestorInventario;
 import com.habitly.model.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.time.LocalDate;
 
 /**
  * Clase principal que gestiona la interfaz de usuario (UI) de Habitly.
  * Coordina la interacción entre el usuario y el sistema de persistencia.
  * * @author DevNaranjo
- * @version 1.0.4
+ * @version 1.0.6
  * @since 1.0.0
  */
 public class Habitly {
@@ -29,46 +31,69 @@ public class Habitly {
             System.out.println("[!] Aviso: Error de compatibilidad al cargar datos previos.");
         }
 
-        // Obliga a identificarse antes de entrar al menú principal
-        while (gestor.getUsuarioIdentificado() == null) {
-            mostrarAsistenteInicial();
-        }
-
-        int opcion;
-        do {
-            mostrarMenu();
-            opcion = leerEntero("Seleccione una operación (1-8): ");
-
-            switch (opcion) {
-                case 1 -> registrarUsuarioMenu();
-                case 2 -> registrarVivienda();
-                case 3 -> listarInventario();
-                case 4 -> {
-                    // Lógica polimórfica según tipo de usuario
-                    if (gestor.getUsuarioIdentificado() instanceof Inquilino) menuEstadoDeCuenta();
-                    else gestionarPago();
-                }
-                case 5 -> {
-                    if (gestor.getUsuarioIdentificado() instanceof Propietario) registrarGastoSuministro();
-                    else System.out.println("[!] Acceso denegado: Solo los propietarios registran facturas.");
-                }
-                case 6 -> aplicarIPCGeneral();
-                case 7 -> cerrarSesionSegura();
-                case 8 -> borrarDatosSistema();
-                default -> System.out.println("Error: Opción no válida.");
+        while (true) {
+            // Obliga a identificarse antes de entrar al menú principal
+            while (gestor.getUsuarioIdentificado() == null) {
+                mostrarAsistenteInicial();
             }
-        } while (opcion != 7 && opcion != 8);
 
-        sc.close();
+            do {
+                mostrarMenu();
+                Usuario u = gestor.getUsuarioIdentificado();
+                if (u == null) {
+                    break;
+                }
+                
+                if (u.getDni().equals("GUEST-001")) {
+                    int opcion = leerEntero("Seleccione una operación (1-2): ");
+                    switch (opcion) {
+                        case 1 -> listarInventario();
+                        case 2 -> cerrarSesionSegura();
+                        default -> System.out.println("Error: Opción no válida.");
+                    }
+                } else if (u instanceof Inquilino) {
+                    int opcion = leerEntero("Seleccione una operación (1-3): ");
+                    switch (opcion) {
+                        case 1 -> listarInventario();
+                        case 2 -> menuEstadoDeCuenta();
+                        case 3 -> cerrarSesionSegura();
+                        default -> System.out.println("Error: Opción no válida.");
+                    }
+                } else {
+                    int opcion = leerEntero("Seleccione una operación (1-11): ");
+                    switch (opcion) {
+                        case 1 -> registrarUsuarioMenu();
+                        case 2 -> registrarVivienda();
+                        case 3 -> listarInventario();
+                        case 4 -> gestionarPago();
+                        case 5 -> registrarGastoSuministro();
+                        case 6 -> eliminarViviendaMenu();
+                        case 7 -> verBeneficioPropietario();
+                        case 8 -> gestionarContratosMenu();
+                        case 9 -> aplicarIPCGeneral();
+                        case 10 -> cerrarSesionSegura();
+                        case 11 -> borrarDatosSistema();
+                        default -> System.out.println("Error: Opción no válida.");
+                    }
+                }
+            } while (gestor.getUsuarioIdentificado() != null);
+        }
     }
 
     /**
      * Gestiona el cierre de sesión y la persistencia final de datos.
      */
     private static void cerrarSesionSegura() {
+        Usuario u = gestor.getUsuarioIdentificado();
+        if (u != null && u.getDni().equals("GUEST-001")) {
+            System.out.println("\nCerrando sesión de invitado...");
+            System.out.println("¡Hasta pronto!");
+            gestor.setUsuarioIdentificado(null);
+            return;
+        }
         System.out.println("\nGuardando cambios y cerrando sesión...");
         gestor.guardarDatos();
-        System.out.println("¡Hasta pronto, " + gestor.getUsuarioIdentificado().getNombre() + "!");
+        System.out.println("¡Hasta pronto, " + (u != null ? u.getNombre() : "Usuario") + "!");
         gestor.setUsuarioIdentificado(null);
     }
 
@@ -77,7 +102,7 @@ public class Habitly {
      */
     private static void mostrarAsistenteInicial() {
         System.out.println("\n========================================");
-        System.out.println("       BIENVENIDO A HABITLY v1.0.5");
+        System.out.println("       BIENVENIDO A HABITLY (v1.0 OFICIAL)");
         System.out.println("========================================");
         System.out.println("1. Registrarme como PROPIETARIO");
         System.out.println("2. Registrarme como INQUILINO");
@@ -87,11 +112,16 @@ public class Habitly {
         if (hayUsuarios) {
             System.out.println("4. Acceder con mi DNI (Login)");
         }
+        System.out.println("0. Salir de la aplicación");
         System.out.println("----------------------------------------");
 
         int opcion = leerEntero("¿Cómo quieres empezar hoy?: ");
 
         switch (opcion) {
+            case 0 -> {
+                System.out.println("\n¡Gracias por usar Habitly! Cerrando...");
+                System.exit(0);
+            }
             case 1 -> registrarPropietario();
             case 2 -> registrarInquilino();
             case 3 -> activarModoInvitado();
@@ -99,7 +129,7 @@ public class Habitly {
                 if (hayUsuarios) accederSistema();
                 else System.out.println("[!] Opción no disponible.");
             }
-            default -> System.out.println("[!] Elija una opción para configurar su sesión.");
+            default -> System.out.println("[!] Elija una opción válida.");
         }
     }
 
@@ -110,7 +140,7 @@ public class Habitly {
         System.out.print("Introduzca su DNI para acceder: ");
         String dni = sc.nextLine();
 
-        Usuario u = gestor.buscarPorDni(dni);
+        Usuario u = gestor.obtenerUsuario(dni);
         if (u != null) {
             // Guardamos el usuario encontrado en la sesión del gestor
             gestor.setUsuarioIdentificado(u);
@@ -135,24 +165,35 @@ public class Habitly {
     private static void mostrarMenu() {
         Usuario u = gestor.getUsuarioIdentificado();
         String nombreUser = u.getNombre().toUpperCase();
-        System.out.println("\n========================================");
-        System.out.println("  HABITLY - SESIÓN: " + nombreUser);
-        System.out.println("========================================");
-        System.out.println("1. Gestión de usuarios y perfiles");
-        System.out.println("2. Registrar nueva vivienda");
-        System.out.println("3. Consultar inventario detallado");
-
-        if (u instanceof Inquilino) {
-            System.out.println("4. MI ESTADO DE CUENTA (Facturas y Deuda)");
+        System.out.println("\n=======================================================");
+        
+        if (u.getDni().equals("GUEST-001")) {
+            System.out.println("  HABITLY - SESIÓN INVITADO: " + nombreUser);
+            System.out.println("=======================================================");
+            System.out.println("1. Consultar inventario detallado");
+            System.out.println("2. Salir");
+        } else if (u instanceof Inquilino) {
+            System.out.println("  HABITLY - SESIÓN INQUILINO: " + nombreUser);
+            System.out.println("=======================================================");
+            System.out.println("1. Consultar inventario detallado");
+            System.out.println("2. MI ESTADO DE CUENTA (Facturas y Deuda)");
+            System.out.println("3. Salir y Guardar");
         } else {
+            System.out.println("  HABITLY - SESIÓN PROPIETARIO: " + nombreUser);
+            System.out.println("=======================================================");
+            System.out.println("1. Gestión de usuarios y perfiles");
+            System.out.println("2. Registrar nueva vivienda");
+            System.out.println("3. Consultar inventario detallado");
             System.out.println("4. Registrar cobro de mensualidad");
-            System.out.println("5. REGISTRAR FACTURA/SUMINISTRO (v1.0.4)");
+            System.out.println("5. REGISTRAR FACTURA/SUMINISTRO");
+            System.out.println("6. ELIMINAR VIVIENDA");
+            System.out.println("7. DASHBOARD DE BENEFICIO TOTAL");
+            System.out.println("8. GESTIÓN DE CONTRATOS Y LEGAL");
+            System.out.println("9. Actualización de precios (IPC)");
+            System.out.println("10. Salir y Guardar");
+            System.out.println("11. Borrar datos (Reset de fábrica)");
         }
-
-        System.out.println("6. Actualización de precios (IPC)");
-        System.out.println("7. Salir y Guardar");
-        System.out.println("8. Borrar datos (Reset de fábrica)");
-        System.out.println("----------------------------------------");
+        System.out.println("-------------------------------------------------------");
     }
 
     /**
@@ -282,9 +323,13 @@ public class Habitly {
 
         Propietario p = new Propietario(dni, nombre, tlf, email, esEmpresa);
         if (gestor.añadirUsuario(p)) {
-            gestor.setUsuarioIdentificado(p);
+            if (gestor.getUsuarioIdentificado() == null) {
+                gestor.setUsuarioIdentificado(p);
+                System.out.println("Usuario registrado e identificado.");
+            } else {
+                System.out.println("Usuario registrado correctamente.");
+            }
             gestor.guardarDatos();
-            System.out.println("Usuario registrado e identificado.");
         }
     }
 
@@ -310,9 +355,13 @@ public class Habitly {
 
         Inquilino i = new Inquilino(dni, nombre, tlf, email, solvencia);
         if (gestor.añadirUsuario(i)) {
-            gestor.setUsuarioIdentificado(i);
+            if (gestor.getUsuarioIdentificado() == null) {
+                gestor.setUsuarioIdentificado(i);
+                System.out.println("Usuario registrado e identificado.");
+            } else {
+                System.out.println("Usuario registrado correctamente.");
+            }
             gestor.guardarDatos();
-            System.out.println("Usuario registrado e identificado.");
         }
     }
 
@@ -452,31 +501,42 @@ public class Habitly {
         while (true) {
             try {
                 System.out.print(m);
-                int v = sc.nextInt();
-                sc.nextLine();
-                return v;
-            } catch (Exception e) {
-                sc.nextLine();
-                System.out.println("ERROR: Formato numérico incorrecto.");
+                String entrada = sc.nextLine().trim();
+                if (entrada.isEmpty()) {
+                    System.out.println("ERROR: La entrada no puede estar vacía.");
+                    continue;
+                }
+                return Integer.parseInt(entrada);
+            } catch (NumberFormatException e) {
+                System.out.println("ERROR: Formato numérico incorrecto. Ingrese un entero.");
             }
         }
     }
 
     /**
-     * Utilidad para leer decimales con control de excepciones.
+     * Utilidad para leer decimales con control de excepciones y validación de rango positivo (>0).
+     * Reemplaza comas por puntos para soporte de localización en español.
      * @param m Mensaje a mostrar.
      * @return Valor double leído.
      */
     private static double leerDouble(String m) {
         while (true) {
+            System.out.print(m);
+            String entrada = sc.nextLine().trim();
+            if (entrada.isEmpty()) {
+                System.out.println("ERROR: La entrada no puede estar vacía.");
+                continue;
+            }
+            entrada = entrada.replace(',', '.');
             try {
-                System.out.print(m);
-                double v = sc.nextDouble();
-                sc.nextLine();
+                double v = Double.parseDouble(entrada);
+                if (v <= 0) {
+                    System.out.println("ERROR: El valor debe ser estrictamente mayor que cero.");
+                    continue;
+                }
                 return v;
-            } catch (Exception e) {
-                sc.nextLine();
-                System.out.println("ERROR: Formato decimal incorrecto.");
+            } catch (NumberFormatException e) {
+                System.out.println("ERROR: Formato decimal incorrecto. Ingrese un número válido.");
             }
         }
     }
@@ -494,5 +554,402 @@ public class Habitly {
             if (in.equals("N")) return false;
             System.out.println("ERROR: Use S o N.");
         }
+    }
+
+    /**
+     * Menú para eliminar una vivienda del propietario actual.
+     * Solo permite eliminar viviendas en estado DISPONIBLE.
+     */
+    private static void eliminarViviendaMenu() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        if (misViviendas.isEmpty()) {
+            System.out.println("[!] No tienes viviendas registradas a tu nombre.");
+            return;
+        }
+
+        System.out.println("\n--- TUS VIVIENDAS ---");
+        for (int i = 0; i < misViviendas.size(); i++) {
+            Vivienda v = misViviendas.get(i);
+            System.out.printf("%d. %s [%s]\n", (i + 1), v.getDireccion(), v.getEstado());
+        }
+        int sel = leerEntero("Seleccione la vivienda a eliminar: ") - 1;
+
+        if (sel >= 0 && sel < misViviendas.size()) {
+            Vivienda v = misViviendas.get(sel);
+            if (v.getEstado() != EstadoVivienda.DISPONIBLE) {
+                System.out.println("[!] Error: Solo se pueden eliminar viviendas en estado DISPONIBLE.");
+                return;
+            }
+            
+            int indexGlobal = gestor.getInventario().indexOf(v);
+            if (indexGlobal != -1 && gestor.eliminarVivienda(indexGlobal)) {
+                System.out.println("Vivienda eliminada correctamente.");
+            } else {
+                System.out.println("[!] Error al intentar eliminar la vivienda.");
+            }
+        } else {
+            System.out.println("Selección inválida.");
+        }
+    }
+
+    /**
+     * Dashboard de beneficio total del propietario.
+     */
+    private static void verBeneficioPropietario() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        double totalIngresos = 0;
+        double totalGastos = 0;
+        
+        System.out.println("\n========================================");
+        System.out.println("    DASHBOARD DE RENTABILIDAD");
+        System.out.println("========================================");
+        
+        if (misViviendas.isEmpty()) {
+            System.out.println("No tienes viviendas registradas a tu nombre.");
+            return;
+        }
+        
+        System.out.printf("%-30s | %-12s | %-12s | %-12s\n", "Dirección", "Ingresos", "Gastos", "Neto");
+        System.out.println("------------------------------------------------------------------------");
+        
+        for (Vivienda v : misViviendas) {
+            double ingresosVivienda = v.getTotalPagadoMes();
+            double gastosVivienda = 0;
+            for (Gasto g : v.getHistorialGastos()) {
+                gastosVivienda += g.getMonto();
+            }
+            double netoVivienda = ingresosVivienda - gastosVivienda;
+            
+            totalIngresos += ingresosVivienda;
+            totalGastos += gastosVivienda;
+            
+            System.out.printf("%-30s | %10.2f€ | %10.2f€ | %10.2f€\n", 
+                v.getDireccion().length() > 30 ? v.getDireccion().substring(0, 27) + "..." : v.getDireccion(), 
+                ingresosVivienda, gastosVivienda, netoVivienda);
+        }
+        
+        double beneficioNeto = gestor.getBeneficioTotal(dniProp);
+        
+        System.out.println("------------------------------------------------------------------------");
+        System.out.printf("%-30s | %10.2f€ | %10.2f€ | %10.2f€\n", "TOTAL GENERAL", totalIngresos, totalGastos, beneficioNeto);
+        System.out.println("========================================");
+    }
+
+    /**
+     * Submenú para gestionar los contratos y el cumplimiento legal.
+     */
+    /**
+     * Submenú para gestionar los contratos y el cumplimiento legal.
+     */
+    private static void gestionarContratosMenu() {
+        int opcion;
+        do {
+            System.out.println("\n===========================================");
+            System.out.println("   HABITLY - GESTIÓN DE CONTRATOS Y LEGAL");
+            System.out.println("===========================================");
+            System.out.println("1. Formalizar nuevo contrato de alquiler");
+            System.out.println("2. Consultar contratos activos");
+            System.out.println("3. Asignar límite IRAV a vivienda");
+            System.out.println("4. Aplicar actualización anual (IRAV)");
+            System.out.println("5. Registrar depósito de fianza (ICAVI)");
+            System.out.println("6. Ver fianzas pendientes de depósito");
+            System.out.println("7. Dashboard de cumplimiento legal");
+            System.out.println("8. Volver");
+            System.out.println("-------------------------------------------");
+            opcion = leerEntero("Seleccione una operación (1-8): ");
+            switch (opcion) {
+                case 1 -> formalizarContratoMenu();
+                case 2 -> consultarContratosActivosMenu();
+                case 3 -> asignarLimiteIravMenu();
+                case 4 -> aplicarActualizacionIravMenu();
+                case 5 -> registrarFianzaMenu();
+                case 6 -> verFianzasPendientesMenu();
+                case 7 -> dashboardCumplimientoLegal();
+                case 8 -> System.out.println("Volviendo al menú del propietario...");
+                default -> System.out.println("Error: Opción no válida.");
+            }
+        } while (opcion != 8);
+    }
+
+    private static void formalizarContratoMenu() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        List<Vivienda> disponibles = new ArrayList<>();
+        for (Vivienda v : misViviendas) {
+            if (v.getEstado() == EstadoVivienda.DISPONIBLE) {
+                disponibles.add(v);
+            }
+        }
+        
+        if (disponibles.isEmpty()) {
+            System.out.println("[!] No tienes viviendas disponibles para alquilar.");
+            return;
+        }
+        
+        System.out.println("\n--- SELECCIONAR VIVIENDA DISPONIBLE ---");
+        for (int i = 0; i < disponibles.size(); i++) {
+            System.out.println((i + 1) + ". " + disponibles.get(i).getDireccion() + " (Límite IRAV: " + disponibles.get(i).getLimiteMaximoIrav() + "€)");
+        }
+        int selV = leerEntero("Seleccione vivienda: ") - 1;
+        if (selV < 0 || selV >= disponibles.size()) {
+            System.out.println("Selección inválida.");
+            return;
+        }
+        Vivienda vivienda = disponibles.get(selV);
+        
+        System.out.print("DNI del inquilino: ");
+        String dniInq = sc.nextLine().trim();
+        Usuario inq = gestor.obtenerUsuario(dniInq);
+        if (inq == null || !(inq instanceof Inquilino)) {
+            System.out.println("[!] Error: El DNI no corresponde a ningún inquilino registrado.");
+            return;
+        }
+        
+        System.out.println("Tipo de Arrendador:");
+        System.out.println("1. FISICO (Persona física - Mínimo legal 5 años)");
+        System.out.println("2. JURIDICO (Empresa - Mínimo legal 7 años)");
+        int selTipo = leerEntero("Seleccione opción: ");
+        TipoArrendador tipo = (selTipo == 2) ? TipoArrendador.JURIDICO : TipoArrendador.FISICO;
+        
+        double renta = leerDouble("Renta mensual acordada (EUR): ");
+        int duracion = leerEntero("Duración del contrato (meses): ");
+        
+        double fianza = leerDouble("Importe de fianza (EUR) [Sugerido: " + renta + "€]: ");
+        double garantias = leerDouble("Garantías adicionales (EUR) [Máx legal: " + (2 * renta) + "€]: ");
+
+        System.out.print("Serie del contrato (un carácter, ej: A): ");
+        String serieStr = sc.nextLine().trim();
+        char serie = (serieStr.isEmpty()) ? 'A' : serieStr.charAt(0);
+        
+        ContratoAlquiler contrato = new ContratoAlquiler(vivienda.getDireccion(), dniInq, tipo, renta, duracion, serie, fianza, garantias);
+        
+        if (!contrato.cumpleDuracionMinimaLegal()) {
+            System.out.println("[!] ERROR LEGAL: Duración insuficiente. La ley exige un mínimo de " +
+                ((tipo == TipoArrendador.FISICO) ? "60" : "84") + " meses.");
+            return;
+        }
+
+        if (!contrato.validarFianzaLegal()) {
+            System.out.println("[!] ERROR LEGAL: El importe de la fianza debe ser exactamente 1 mes de renta (" + renta + "€) y las garantías adicionales no pueden superar las 2 mensualidades (" + (2 * renta) + "€).");
+            return;
+        }
+        
+        String res = gestor.formalizarContrato(contrato, vivienda);
+        System.out.println(res);
+    }
+
+    private static void consultarContratosActivosMenu() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        System.out.println("\n========================================");
+        System.out.println("          CONTRATOS DE ALQUILER");
+        System.out.println("========================================");
+        
+        boolean hayContratos = false;
+        for (Vivienda v : misViviendas) {
+            ContratoAlquiler c = v.getContratoActivo();
+            if (c != null) {
+                hayContratos = true;
+                Usuario inq = gestor.obtenerUsuario(c.getDniInquilino());
+                String nombreInq = inq != null ? inq.getNombre() : "Desconocido";
+                System.out.printf("Vivienda: %s\n", v.getDireccion());
+                System.out.printf("  ID Contrato:  %s\n", c.getIdContrato());
+                System.out.printf("  Inquilino:    %s (DNI: %s)\n", nombreInq, c.getDniInquilino());
+                System.out.printf("  Renta:        %.2f€/mes\n", c.getRentaMensual());
+                System.out.printf("  Fecha Firma:  %s | Vencimiento: %s\n", c.getFechaFirma(), c.getFechaVencimiento());
+                System.out.printf("  Fianza Legal: %.2f€ (%s)\n", c.getImporteFianza(), c.isFianzaDepositada() ? "DEPOSITADA" : "PENDIENTE");
+                System.out.printf("  Garantías:    %.2f€\n", c.getGarantiasAdicionales());
+                System.out.printf("  Estado:       %s\n", c.getEstado());
+                System.out.println("----------------------------------------");
+            }
+        }
+        if (!hayContratos) {
+            System.out.println("No tienes ningún contrato de alquiler activo.");
+        }
+        System.out.println("========================================");
+    }
+
+    private static void aplicarActualizacionIravMenu() {
+        System.out.println("\n========================================");
+        System.out.println("    ACTUALIZACIÓN ANUAL DE RENTA (IRAV)");
+        System.out.println("========================================");
+        System.out.println("Índice de referencia actual (IRAV mayo 2026: 2.47%)");
+        double porcentaje = leerDouble("Introduzca el porcentaje de actualización (%): ");
+        
+        System.out.println("¿Desea forzar la actualización para pruebas?");
+        System.out.println("1. No (Solo aplicar si es la fecha exacta del aniversario)");
+        System.out.println("2. Sí (Aplicar a todos los contratos vigentes de inmediato)");
+        int sel = leerEntero("Seleccione opción: ");
+        boolean forzar = (sel == 2);
+        
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        int actualizados = gestor.aplicarActualizacionAnualIRAV(dniProp, porcentaje, forzar);
+        
+        System.out.printf("[+] Se han actualizado %d contratos.\n", actualizados);
+        System.out.println("========================================");
+    }
+
+    private static void dashboardCumplimientoLegal() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        int totalContratos = 0;
+        int pendientesFianza = 0;
+        int fueraPlazoFianza = 0;
+        
+        List<ContratoAlquiler> proximosVencer = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+        
+        for (Vivienda v : misViviendas) {
+            ContratoAlquiler c = v.getContratoActivo();
+            if (c != null && c.estaVigente()) {
+                totalContratos++;
+                if (!c.isFianzaDepositada()) {
+                    pendientesFianza++;
+                    if (c.estaPendienteDepositoIcavi()) {
+                        fueraPlazoFianza++;
+                    }
+                }
+                
+                // Alerta de vencimiento (4 meses de antelación para el arrendador)
+                LocalDate vto = c.getFechaVencimiento();
+                if (vto != null) {
+                    LocalDate limiteAviso = hoy.plusMonths(4);
+                    if (vto.isEqual(hoy) || (vto.isAfter(hoy) && vto.isBefore(limiteAviso.plusDays(1)))) {
+                        proximosVencer.add(c);
+                    }
+                }
+            }
+        }
+        
+        System.out.println("\n========================================");
+        System.out.println("     DASHBOARD DE CUMPLIMIENTO LEGAL");
+        System.out.println("========================================");
+        System.out.printf("Total Contratos Activos:            %d\n", totalContratos);
+        System.out.printf("Fianzas Pendientes de Depósito:    %d\n", pendientesFianza);
+        System.out.printf("  -> Fuera de plazo legal (>30d):   %d\n", fueraPlazoFianza);
+        System.out.printf("Contratos Próximos a Vencer (<4m):  %d\n", proximosVencer.size());
+        System.out.println("----------------------------------------");
+        
+        if (fueraPlazoFianza > 0) {
+            System.out.println("[⚠️ ALERTA DE COMPLIANCE]: Tienes fianzas fuera de plazo legal.");
+            for (Vivienda v : misViviendas) {
+                ContratoAlquiler c = v.getContratoActivo();
+                if (c != null && !c.isFianzaDepositada() && c.estaPendienteDepositoIcavi()) {
+                    System.out.printf("  - Contrato: %s (Vivienda: %s). Límite de depósito expiró el %s.\n",
+                        c.getIdContrato(), v.getDireccion(), c.getPlazoLimiteDeposito());
+                }
+            }
+            System.out.println("----------------------------------------");
+        }
+        
+        if (!proximosVencer.isEmpty()) {
+            System.out.println("[⚠️ ALERTA DE VENCIMIENTO]: Contratos próximos a vencer/renovar:");
+            for (ContratoAlquiler c : proximosVencer) {
+                long mesesRestantes = java.time.temporal.ChronoUnit.MONTHS.between(hoy, c.getFechaVencimiento());
+                System.out.printf("  - Contrato: %s (Vivienda: %s). Vence el: %s (en %d meses). Plazo preaviso: 4 meses.\n",
+                    c.getIdContrato(), c.getDireccionVivienda(), c.getFechaVencimiento(), mesesRestantes);
+            }
+            System.out.println("----------------------------------------");
+        }
+        
+        System.out.println("Normativa aplicada: LAU 2026 + Ley 12/2023");
+        System.out.println("========================================");
+    }
+
+    private static void asignarLimiteIravMenu() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        if (misViviendas.isEmpty()) {
+            System.out.println("[!] No tienes viviendas registradas a tu nombre.");
+            return;
+        }
+        
+        System.out.println("\n--- TUS VIVIENDAS ---");
+        for (int i = 0; i < misViviendas.size(); i++) {
+            Vivienda v = misViviendas.get(i);
+            System.out.printf("%d. %s [Límite IRAV actual: %.2f€]\n", (i + 1), v.getDireccion(), v.getLimiteMaximoIrav());
+        }
+        int sel = leerEntero("Seleccione vivienda: ") - 1;
+        if (sel < 0 || sel >= misViviendas.size()) {
+            System.out.println("Selección inválida.");
+            return;
+        }
+        Vivienda v = misViviendas.get(sel);
+        double limite = leerDouble("Nuevo límite máximo IRAV (EUR): ");
+        if (limite < 0) {
+            System.out.println("[!] El límite no puede ser negativo.");
+            return;
+        }
+        v.setLimiteMaximoIrav(limite);
+        gestor.guardarDatos();
+        System.out.println("Límite IRAV asignado correctamente.");
+    }
+
+    private static void registrarFianzaMenu() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        List<Vivienda> conPendiente = new ArrayList<>();
+        for (Vivienda v : misViviendas) {
+            if (v.getContratoActivo() != null && !v.getContratoActivo().isFianzaDepositada()) {
+                conPendiente.add(v);
+            }
+        }
+        
+        if (conPendiente.isEmpty()) {
+            System.out.println("No tienes contratos con fianza pendiente de depósito.");
+            return;
+        }
+        
+        System.out.println("\n--- CONTRATOS CON FIANZA PENDIENTE (ICAVI) ---");
+        for (int i = 0; i < conPendiente.size(); i++) {
+            Vivienda v = conPendiente.get(i);
+            System.out.printf("%d. Vivienda: %s | Contrato: %s\n", (i + 1), v.getDireccion(), v.getContratoActivo().getIdContrato());
+        }
+        
+        int sel = leerEntero("Seleccione contrato: ") - 1;
+        if (sel < 0 || sel >= conPendiente.size()) {
+            System.out.println("Selección inválida.");
+            return;
+        }
+        
+        Vivienda v = conPendiente.get(sel);
+        v.getContratoActivo().registrarDepositoFianza();
+        gestor.guardarDatos();
+        System.out.println("Fianza registrada en ICAVI correctamente.");
+    }
+
+    private static void verFianzasPendientesMenu() {
+        String dniProp = gestor.getUsuarioIdentificado().getDni();
+        List<Vivienda> misViviendas = gestor.getViviendasPorDueño(dniProp);
+        
+        List<Vivienda> conPendiente = new ArrayList<>();
+        for (Vivienda v : misViviendas) {
+            if (v.getContratoActivo() != null && !v.getContratoActivo().isFianzaDepositada()) {
+                conPendiente.add(v);
+            }
+        }
+        
+        System.out.println("\n========================================");
+        System.out.println("   FIANZAS PENDIENTES DE DEPÓSITO");
+        System.out.println("========================================");
+        if (conPendiente.isEmpty()) {
+            System.out.println("No hay fianzas pendientes.");
+            return;
+        }
+        
+        for (Vivienda v : conPendiente) {
+            ContratoAlquiler c = v.getContratoActivo();
+            System.out.printf("Contrato: %s | Inquilino DNI: %s | Renta: %.2f€ | Vivienda: %s\n",
+                c.getIdContrato(), c.getDniInquilino(), c.getRentaMensual(), v.getDireccion());
+        }
+        System.out.println("========================================");
     }
 }

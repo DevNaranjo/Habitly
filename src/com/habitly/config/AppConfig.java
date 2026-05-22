@@ -2,17 +2,25 @@ package com.habitly.config;
 
 import java.io.File;
 
+/**
+ * Configuración global del sistema Habitly.
+ * Centraliza las rutas de persistencia de datos y constantes fiscales aplicables.
+ * 
+ * @author DevNaranjo
+ * @version 1.0.6
+ * @since 1.0.0
+ */
 public class AppConfig {
 
-    //Tasa del Impuesto General Indirecto Canario aplicable (7.0%).
-    public static final double IGIC = 7.0;
+    // Tasa del Impuesto General Indirecto Canario aplicable en porcentaje (7.0%).
+    public static final double IGIC_TASA = 7.0;
+
+    // Tasa del Impuesto General Indirecto Canario aplicable como factor (0.07).
+    public static final double IGIC_PORCENTAJE = 0.07;
 
     // Nombre de la carpeta y del archivo
     private static final String APP_FOLDER = "Habitly";
     private static final String FILE_NAME = "inventario_habitly.dat";
-
-    //Nombre del archivo binario donde se persistirán los datos.
-    public static final String NOMBRE_ARCHIVO = "inventario_habitly.dat";
 
     //Construye la ruta de la carpeta según el Sistema Operativo.
     public static String getStoragePath() {

@@ -14,7 +14,7 @@ import java.util.Arrays;
  * Utilidad técnica para el cifrado y descifrado de flujos de objetos.
  * Implementa el estándar AES-128 para garantizar la privacidad de los datos locales.
  * * @author DevNaranjo
- * @version 1.0.34
+ * @version 1.0.6
  * @since 1.0.3
  */
 

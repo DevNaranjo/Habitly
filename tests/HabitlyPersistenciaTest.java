@@ -4,12 +4,12 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Test de Persistencia v1.0.34
+ * Test de Persistencia v1.0.6
  * Verifica el ciclo de cifrado AES y recuperación mediante CajaFuerte.
  */
 public class HabitlyPersistenciaTest {
     public static void main(String[] args) {
-        System.out.println("=== TEST DE PERSISTENCIA CIFRADA (AES) v1.0.34 ===");
+        System.out.println("=== TEST DE PERSISTENCIA CIFRADA (AES) v1.0.6 ===");
 
         // 1. Inicialización y Limpieza de fábrica para empezar de cero
         GestorInventario gestor = new GestorInventario();

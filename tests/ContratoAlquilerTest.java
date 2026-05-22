@@ -7,12 +7,12 @@ import com.habitly.model.TipoArrendador;
  * Test unitario para validar la lógica interna de la clase ContratoAlquiler.
  * Verifica las reglas de la LAU y el control de fianzas.
  * @author DevNaranjo
- * @version 1.0.5
+ * @version 1.0.6
  */
 public class ContratoAlquilerTest {
 
     public static void main(String[] args) {
-        System.out.println("=== UNIT TEST: CONTRATO ALQUILER v1.0.5 ===");
+        System.out.println("=== UNIT TEST: CONTRATO ALQUILER v1.0.6 ===");
 
         // 1. Probar contrato para Persona Física (Mínimo 5 años / 60 meses)
         // Parámetros: Dirección, DNI Inquilino, Tipo, Renta, Meses, Serie

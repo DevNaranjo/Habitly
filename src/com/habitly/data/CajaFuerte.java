@@ -10,7 +10,7 @@ import java.util.HashMap;
  * Estructura de empaquetado para la persistencia cifrada.
  * Permite agrupar las colecciones de usuarios e inventario en un único objeto serializable.
  * * @author DevNaranjo
- * @version 1.0.34
+ * @version 1.0.6
  * @since 1.0.3
  */
 

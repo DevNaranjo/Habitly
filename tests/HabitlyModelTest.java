@@ -2,12 +2,12 @@ import com.habitly.model.Casa;
 import com.habitly.model.Piso;
 
 /**
- * Test Integral de Modelos Habitly v1.0.4
+ * Test Integral de Modelos Habitly v1.0.6
  * Verifica la jerarquía de Vivienda, Piso y Casa con sus nuevos constructores.
  */
 public class HabitlyModelTest {
     public static void main(String[] args) {
-        System.out.println("=== UNIT TEST: MODELOS INMOBILIARIOS v1.0.4 ===");
+        System.out.println("=== UNIT TEST: MODELOS INMOBILIARIOS v1.0.6 ===");
 
         // 1. Configuración de datos de prueba
         String dniProp = "12345678A";
@@ -31,11 +31,11 @@ public class HabitlyModelTest {
             System.out.println("❌ [ERROR] Fallo en la herencia de atributos base.");
         }
 
-        // PRUEBA B: Cálculos Económicos (IGIC 7%)
-        // 800 * 1.07 = 856.0
-        double precioEsperadoPiso = 856.0;
+        // PRUEBA B: Cálculos Económicos (IGIC Exento)
+        // 800.0
+        double precioEsperadoPiso = 800.0;
         if (Math.abs(miPiso.getPrecioFinalConImpuestos() - precioEsperadoPiso) < 0.01) {
-            System.out.println("✅ [OK] Cálculo IGIC (7%) en Piso correcto: " + miPiso.getPrecioFinalConImpuestos() + "€");
+            System.out.println("✅ [OK] Cálculo IGIC (Exento) en Piso correcto: " + miPiso.getPrecioFinalConImpuestos() + "€");
         } else {
             System.out.println("❌ [ERROR] Fallo en cálculo de impuestos. Obtenido: " + miPiso.getPrecioFinalConImpuestos());
         }
@@ -58,7 +58,7 @@ public class HabitlyModelTest {
         }
 
         System.out.println("\n--- RESUMEN DE OBJETOS CREADOS ---");
-        System.out.println("Piso: " + miPiso.getDireccion() + " | " + miPiso.getPrecioFinalConImpuestos() + "€ (IGIC inc.)");
+        System.out.println("Piso: " + miPiso.getDireccion() + " | " + miPiso.getPrecioFinalConImpuestos() + "€ (exento de IGIC)");
         System.out.println("Casa: " + miCasa.getDireccion() + " | Parcela: " + miCasa.getMetrosParcela() + "m2");
         System.out.println("=============================================");
     }

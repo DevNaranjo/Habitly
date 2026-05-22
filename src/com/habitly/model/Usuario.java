@@ -7,7 +7,7 @@ import java.time.LocalDate;
  * Clase abstracta que define la estructura base de un usuario en Habitly.
  * Proporciona los atributos comunes de identificación y contacto.
  * * @author DevNaranjo
- * @version 1.0.34
+ * @version 1.0.6
  * @since 1.0.3
  */
 

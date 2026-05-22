@@ -6,7 +6,7 @@ import java.io.Serializable;
  * Especialización de vivienda para inmuebles en régimen de propiedad horizontal.
  * Añade atributos de ubicación vertical (planta y puerta).
  * * @author DevNaranjo
- * @version 1.0.4
+ * @version 1.0.6
  * @since 1.0.0
  */
 public class Piso extends Vivienda implements Serializable {
@@ -46,12 +46,14 @@ public class Piso extends Vivienda implements Serializable {
     // --- LÓGICA DE NEGOCIO ---
 
     /**
-     * Calcula el precio final de la mensualidad del piso aplicando el IGIC.
-     * @return double con el precio final (Base + 7% IGIC).
+     * Calcula el precio final de la mensualidad del piso.
+     * Según la legislación de Canarias para 2026, el arrendamiento de vivienda habitual 
+     * está exento de IGIC, por lo que se devuelve el precio base sin impuestos adicionales.
+     * @return double con el precio final (Base, exento de IGIC).
      */
     @Override
     public double getPrecioFinalConImpuestos() {
-        return Math.round((getPrecioBase() * 1.07) * 100.0) / 100.0;
+        return Math.round(getPrecioBase() * 100.0) / 100.0;
     }
 
     // --- GETTERS ---

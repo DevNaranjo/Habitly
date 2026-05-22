@@ -9,7 +9,7 @@ import java.util.List;
  * Gestiona la lógica de precios, estado de ocupación, mantenimiento
  * y cumplimiento de la Ley de Vivienda (IRAV).
  * * @author DevNaranjo
- * @version 1.0.5
+ * @version 1.0.6
  * @since 1.0.0
  */
 public abstract class Vivienda implements Serializable {

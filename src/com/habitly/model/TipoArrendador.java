@@ -3,7 +3,7 @@ package com.habitly.model;
 /**
  * Definición categorías para el Tipo de Arrendador. Vigente a la ley Española
  * @author DevNaranjo
- * @version 1.0.5
+ * @version 1.0.6
  */
 public enum TipoArrendador {
     FISICO, //Sujeto a prórroga obligatoria de 5 años.

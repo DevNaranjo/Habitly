@@ -5,13 +5,13 @@ import com.habitly.model.*;
  * Suite de pruebas definitiva para la validación de la Etapa 5.
  * Utiliza el modelo real de Inquilinos y Propietarios para auditar la lógica legal.
  * @author DevNaranjo
- * @version 1.0.5
+ * @version 1.0.6
  */
 public class HabitlyLegalTest {
 
     public static void main(String[] args) {
         System.out.println("=====================================================");
-        System.out.println("   HABITLY LEGAL TEST - AUDITORÍA FINAL v1.0.5");
+        System.out.println("   HABITLY LEGAL TEST - AUDITORÍA FINAL v1.0.6");
         System.out.println("=====================================================");
 
         auditarFiscalidadIGIC();
@@ -19,19 +19,19 @@ public class HabitlyLegalTest {
         auditarCicloVidaAlquiler();
 
         System.out.println("=====================================================");
-        System.out.println("   RESULTADO: LISTO PARA RELEASE v1.0.5");
+        System.out.println("   RESULTADO: LISTO PARA RELEASE v1.0.6");
         System.out.println("=====================================================");
     }
 
     /**
-     * Verifica que el IGIC canario (7%) se aplique correctamente sobre la base.
+     * Verifica que el IGIC canario para vivienda habitual está exento (0%).
      */
     private static void auditarFiscalidadIGIC() {
-        System.out.print("[AUDIT] IGIC 7% (Canarias): ");
+        System.out.print("[AUDIT] IGIC Exento (Vivienda Habitual Canarias): ");
         // Usamos Piso de v1.0.4
         Piso p = new Piso("PROP_DNI", "Calle Mayor 10", 1000.0, 90.0, 3, 2, true, false, true, "Excelente", 4, "A");
 
-        double esperado = 1070.0;
+        double esperado = 1000.0;
         if (p.getPrecioFinalConImpuestos() == esperado) {
             System.out.println("PASADO ✅");
         } else {
