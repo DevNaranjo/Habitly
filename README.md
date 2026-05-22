@@ -37,6 +37,9 @@
 
 *Nota: Al ejecutarse por primera vez, el asistente inicial te guiará para registrar el primer administrador. También dispone de un **Modo Invitado (Sandbox)** para explorar de forma segura y sin dejar rastro en disco.*
 
+> [!WARNING]
+> **Solución de problemas (Troubleshooting):** Si al ejecutar el proyecto recibes el error `UnsupportedClassVersionError`, significa que la versión global de Java de tu sistema es demasiado antigua (ej. Java 8). Para solucionarlo, asegúrate de actualizar tus variables de entorno `PATH` para que apunten a tu JDK 17 o superior.
+
 ## 🧪 Pruebas de Cumplimiento (Compliance QA Testing)
 
 Habitly v1.0 cuenta con una suite completa (`ValidadorLegalCompliance`) que audita en tiempo real que todas las reglas legales sobre índices de renta, fianza, renovaciones y duraciones mínimas se respeten en el sistema.
@@ -87,6 +90,9 @@ java -cp out com.habitly.test.ValidadorLegalCompliance
    ```
 
 *Note: On your first run, the Setup Wizard will guide you. You can also enter the sandboxed **Guest Mode** to explore features securely with read-only privileges.*
+
+> [!WARNING]
+> **Troubleshooting:** If you receive an `UnsupportedClassVersionError` upon running the application, it means your system's global Java version is outdated (e.g. Java 8). To fix this, ensure your `PATH` environment variable points to your JDK 17 or newer installation.
 
 ## 🧪 Compliance QA Testing
 
