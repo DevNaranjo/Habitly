@@ -219,7 +219,7 @@ public class ContratoAlquiler implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("Contrato %s | Inquilino: %s | Renta: %.2f€ | Estado: %s | Fianza: %s",
+        return String.format("Contrato %s | Inquilino: %s | Renta: %.2fE | Estado: %s | Fianza: %s",
                 idContrato, dniInquilino, rentaMensual, estado, fianzaDepositada ? "OK" : "PENDIENTE");
     }
 }

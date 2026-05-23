@@ -60,7 +60,7 @@ public class Habitly {
                         default -> System.out.println("Error: Opción no válida.");
                     }
                 } else {
-                    int opcion = leerEntero("Seleccione una operación (1-11): ");
+                    int opcion = leerEntero("Seleccione una operación (1-12): ");
                     switch (opcion) {
                         case 1 -> registrarUsuarioMenu();
                         case 2 -> registrarVivienda();
@@ -73,6 +73,7 @@ public class Habitly {
                         case 9 -> aplicarIPCGeneral();
                         case 10 -> cerrarSesionSegura();
                         case 11 -> borrarDatosSistema();
+                        case 12 -> listarMisViviendasMenu();
                         default -> System.out.println("Error: Opción no válida.");
                     }
                 }
@@ -192,6 +193,7 @@ public class Habitly {
             System.out.println("9. Actualización de precios (IPC)");
             System.out.println("10. Salir y Guardar");
             System.out.println("11. Borrar datos (Reset de fábrica)");
+            System.out.println("12. Listar mis viviendas");
         }
         System.out.println("-------------------------------------------------------");
     }
@@ -459,23 +461,77 @@ public class Habitly {
     }
 
     /**
+     * Imprime una sugerencia de DNIs disponibles en el sistema.
+     */
+    private static void mostrarDnisDisponibles(boolean soloInquilinos, boolean excluirActual) {
+        String miDni = gestor.getUsuarioIdentificado() != null ? gestor.getUsuarioIdentificado().getDni() : "";
+        List<String> dnis = new ArrayList<>();
+        for (Usuario u : gestor.obtenerTodosLosUsuarios()) {
+            if (excluirActual && u.getDni().equals(miDni)) continue;
+            if (soloInquilinos && !(u instanceof Inquilino)) continue;
+            dnis.add(u.getDni() + " (" + u.getNombre() + ")");
+        }
+        if (!dnis.isEmpty()) {
+            System.out.println("   [Sugerencias: " + String.join(", ", dnis) + "]");
+        }
+    }
+
+    /**
+     * Muestra las viviendas que le pertenecen al propietario en sesión.
+     */
+    private static void listarMisViviendasMenu() {
+        System.out.println("\n--- MIS VIVIENDAS ---");
+        List<Vivienda> misPisos = gestor.getViviendasPorDueño(gestor.getUsuarioIdentificado().getDni());
+        if (misPisos.isEmpty()) {
+            System.out.println("[!] No tienes viviendas registradas a tu nombre.");
+            return;
+        }
+        System.out.println("ID | ESTADO | DIRECCIÓN | TIPO | M2 | EUR/M2");
+        for (int i = 0; i < misPisos.size(); i++) {
+            Vivienda v = misPisos.get(i);
+            String tipo = (v instanceof Piso) ? "Piso" : "Casa";
+            System.out.printf("%d | %s | %s | %s | %.0f | %.2f\n", (i+1), v.getEstado(), v.getDireccion(), tipo, v.getSuperficie(), v.getPrecioMetroCuadrado());
+        }
+    }
+
+    /**
      * Localiza y muestra la información de un usuario por su DNI.
      */
     private static void buscarUsuario() {
+        System.out.println("\n--- BUSCAR USUARIO ---");
+        mostrarDnisDisponibles(false, false);
         System.out.print("DNI a buscar: ");
         Usuario u = gestor.obtenerUsuario(sc.nextLine());
-        if (u != null) System.out.println("Encontrado: " + u.getNombre() + " (" + u.getEmail() + ")");
-        else System.out.println("No encontrado.");
+        if (u != null) {
+            System.out.println("Encontrado: " + u.getNombre() + " (" + u.getEmail() + ")");
+            if (u instanceof Inquilino inq) {
+                System.out.println("  Rol: INQUILINO");
+                System.out.println("  Solvencia: " + inq.getSolvencia() + "%");
+            } else if (u instanceof Propietario) {
+                System.out.println("  Rol: PROPIETARIO");
+            }
+        } else {
+            System.out.println("No encontrado.");
+        }
     }
 
     /**
      * Elimina un usuario del sistema mediante su DNI.
      */
     private static void eliminarUsuario() {
+        System.out.println("\n--- ELIMINAR USUARIO ---");
+        mostrarDnisDisponibles(false, true);
         System.out.print("DNI a eliminar: ");
-        if (gestor.eliminarUsuario(sc.nextLine())) {
+        String dni = sc.nextLine();
+        if (dni.equals(gestor.getUsuarioIdentificado().getDni())) {
+            System.out.println("[!] Error: No puedes eliminar tu propio usuario mientras la sesión está abierta.");
+            return;
+        }
+        if (gestor.eliminarUsuario(dni)) {
             gestor.guardarDatos();
             System.out.println("Usuario eliminado.");
+        } else {
+            System.out.println("No se pudo eliminar el usuario (no existe o error interno).");
         }
     }
 
@@ -701,6 +757,7 @@ public class Habitly {
         }
         Vivienda vivienda = disponibles.get(selV);
         
+        mostrarDnisDisponibles(true, true);
         System.out.print("DNI del inquilino: ");
         String dniInq = sc.nextLine().trim();
         Usuario inq = gestor.obtenerUsuario(dniInq);

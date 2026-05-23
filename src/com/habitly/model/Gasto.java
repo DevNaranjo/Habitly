@@ -70,7 +70,7 @@ public class Gasto implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("[%s] ID: %s | %s | %.2f€ | Estado: %s",
+        return String.format("[%s] ID: %s | %s | %.2fE | Estado: %s",
                 fechaRegistro, idGasto, concepto, monto, pagado ? "PAGADO" : "PENDIENTE");
     }
 }

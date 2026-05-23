@@ -15,7 +15,7 @@
 * **🇮🇨 Fiscalidad de Canarias (IGIC):** Núcleo financiero adaptado, que aplica automáticamente la **exención del IGIC (0%)** en viviendas de alquiler habitual, manteniendo el soporte para alquileres turísticos.
 * **🏦 Fianzas y Garantías (ICAVI):** Validación estricta del depósito legal (exactamente 1 mes) y garantías adicionales (máximo 2 meses), con seguimiento en tiempo real de los depósitos pendientes de registro oficial en el ICAVI.
 * **📊 Dashboard de Beneficios del Propietario:** Cálculo en tiempo real del margen neto (ingresos de alquiler totales menos gastos registrados) de manera consolidada y por unidad.
-* **🔐 Persistencia Cifrada AES-128:** Almacenamiento seguro mediante cifrado AES de 128 bits. Los datos se guardan en un archivo binario (`sistema.dat`), protegiendo absolutamente la privacidad de inquilinos y arrendadores.
+* **🔐 Persistencia Cifrada de Grado Militar (AES-GCM):** Almacenamiento súper seguro mediante AES-256 en modo GCM, con derivación de clave por PBKDF2 y salting dinámico. Los datos se guardan en un archivo binario validado contra manipulaciones externas, protegiendo absolutamente la privacidad.
 
 ## 🛠️ Instalación y Uso
 
@@ -69,7 +69,7 @@ java -cp out com.habitly.test.ValidadorLegalCompliance
 * **🇮🇨 Canary Islands Taxation (IGIC):** Optimized financial core complying with local tax regulations, recognizing that residential rental for primary residence is **exempt from IGIC** (0%), while keeping support for tourist rental tax calculations.
 * **🏦 Security Deposit & Guarantees (ICAVI):** Strict validation of security deposits (exactly 1 month) and additional guarantees (max 2 months), with active tracking of pending official deposits with the ICAVI.
 * **📊 Owner Profit Dashboard:** Live calculation of net margins (total rental income minus registered housing expenses).
-* **🔐 AES-128 Persistence:** Professional-grade persistence via **128-bit AES encryption**. Data is stored in an encrypted binary file (`sistema.dat`), protecting user privacy.
+* **🔐 Military-Grade AES-GCM Persistence:** Professional-grade persistence via **AES-256 in GCM mode**, featuring PBKDF2 key derivation and dynamic salting. Data is stored in a tamper-proof encrypted binary file, strictly protecting user privacy.
 
 ## 🛠️ Installation & Usage
 
