@@ -1,35 +1,49 @@
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import com.habitly.data.CryptoManager;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-/**
- * Test de integridad para el motor de cifrado AES-128 de Habitly v1.0.6.
- */
 public class CryptoTest {
-    public static void main(String[] args) {
-        System.out.println("=== UNIT TEST: CRYPTO MANAGER ===");
 
-        try {
-            String original = "Datos de prueba Habitly 2026";
-            byte[] entrada = original.getBytes(StandardCharsets.UTF_8);
+    static {
+        System.setProperty("habitly.env", "test");
+    }
 
-            // 1. Probar Cifrado
-            byte[] cifrado = CryptoManager.cifrar(entrada);
-            System.out.println("-> Cifrado completado con éxito.");
+    @Test
+    public void testCifradoGuardarYLeer() throws Exception {
+        String testFile = "data/test_cifrado.dat";
+        Files.deleteIfExists(Paths.get(testFile));
+        
+        String data = "Datos de prueba Habitly 2026";
+        CryptoManager.guardarObjetoCifrado(data, testFile);
+        
+        assertTrue(Files.exists(Paths.get(testFile)));
+        assertTrue(Files.size(Paths.get(testFile)) > 0);
+        
+        Object read = CryptoManager.leerObjetoCifrado(testFile);
+        assertEquals(data, read);
+        
+        Files.deleteIfExists(Paths.get(testFile));
+    }
 
-            // 2. Probar Descifrado
-            byte[] descifrado = CryptoManager.descifrar(cifrado);
-            String resultado = new String(descifrado, StandardCharsets.UTF_8);
-
-            // 3. Verificación
-            if (original.equals(resultado)) {
-                System.out.println("RESULTADO: El motor AES es estable y simétrico.");
-            } else {
-                System.out.println("RESULTADO: Error de integridad de datos.");
-            }
-
-        } catch (Exception e) {
-            System.out.println("ERROR: El sistema de cifrado ha fallado.");
-            e.printStackTrace();
-        }
+    @Test
+    public void testPasswordHashing() throws Exception {
+        String password = "MiSuperPassword123";
+        byte[] salt = CryptoManager.generarSalt();
+        String hash1 = CryptoManager.hashPassword(password, salt);
+        String hash2 = CryptoManager.hashPassword(password, salt);
+        
+        assertEquals(hash1, hash2);
+        
+        byte[] salt2 = CryptoManager.generarSalt();
+        String hash3 = CryptoManager.hashPassword(password, salt2);
+        assertNotEquals(hash1, hash3);
+        
+        String saltHex = CryptoManager.bytesToHex(salt);
+        byte[] saltDecoded = CryptoManager.hexToBytes(saltHex);
+        assertArrayEquals(salt, saltDecoded);
     }
 }

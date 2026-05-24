@@ -9,7 +9,7 @@ import java.util.List;
  * Gestiona la lógica de precios, estado de ocupación, mantenimiento
  * y cumplimiento de la Ley de Vivienda (IRAV).
  * * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  * @since 1.0.0
  */
 public abstract class Vivienda implements Serializable {
@@ -36,6 +36,7 @@ public abstract class Vivienda implements Serializable {
     // Atributos v1.0.50 - Etapa 5 (Compliance)
     private double limiteMaximoIrav; // Límite legal según el índice de referencia
     private ContratoAlquiler contratoActivo;
+    private boolean esAlquilerTuristico;
 
     public Vivienda(String idPropietario, String direccion, double precioBase, double superficie, int habitaciones, int baños,
                     boolean tieneGaraje, boolean tienePiscina, boolean estaAmueblado, String conservacion) {
@@ -53,6 +54,7 @@ public abstract class Vivienda implements Serializable {
         this.historialGastos = new ArrayList<>();
         this.inquilino = null;
         this.limiteMaximoIrav = 0.0; // Se debe setear tras el análisis legal
+        this.esAlquilerTuristico = false;
     }
 
     // --- GETTERS ---
@@ -136,7 +138,16 @@ public abstract class Vivienda implements Serializable {
         return pendientes;
     }
 
-    public abstract double getPrecioFinalConImpuestos();
+    public boolean isEsAlquilerTuristico() { return esAlquilerTuristico; }
+    public void setEsAlquilerTuristico(boolean esAlquilerTuristico) { this.esAlquilerTuristico = esAlquilerTuristico; }
+
+    public double getPrecioFinalConImpuestos() {
+        if (this.esAlquilerTuristico) {
+            double impuestos = getPrecioBase() * com.habitly.config.AppConfig.IGIC_PORCENTAJE;
+            return Math.round((getPrecioBase() + impuestos) * 100.0) / 100.0;
+        }
+        return Math.round(getPrecioBase() * 100.0) / 100.0;
+    }
 
     public double getPendienteDePago() {
         double pendiente = getPrecioFinalConImpuestos() - totalPagadoMes;

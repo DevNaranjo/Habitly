@@ -16,6 +16,7 @@
 * **🏦 Fianzas y Garantías (ICAVI):** Validación estricta del depósito legal (exactamente 1 mes) y garantías adicionales (máximo 2 meses), con seguimiento en tiempo real de los depósitos pendientes de registro oficial en el ICAVI.
 * **📊 Dashboard de Beneficios del Propietario:** Cálculo en tiempo real del margen neto (ingresos de alquiler totales menos gastos registrados) de manera consolidada y por unidad.
 * **🔐 Persistencia Cifrada de Grado Militar (AES-GCM):** Almacenamiento súper seguro mediante AES-256 en modo GCM, con derivación de clave por PBKDF2 y salting dinámico. Los datos se guardan en un archivo binario validado contra manipulaciones externas, protegiendo absolutamente la privacidad.
+* **🛡️ Integridad de Datos y Prevención de Errores:** Bloqueo inteligente de borrado en cascada (no se permiten datos huérfanos), identificadores criptográficos únicos (UUIDs) y validación estricta de entradas mediante Expresiones Regulares (Regex) para DNIs y correos electrónicos.
 
 ## 🛠️ Instalación y Uso
 
@@ -26,8 +27,8 @@
 
 2. **Compilar el proyecto (JDK 17+ u OpenJDK 25)**:
    ```bash
-   javac -d out -sourcepath src src/com/habitly/ui/Habitly.java src/com/habitly/model/*.java src/com/habitly/data/*.java src/com/habitly/config/*.java
-   javac -d out -cp out -sourcepath tests tests/*.java
+   javac -d out -sourcepath src src/com/habitly/ui/Habitly.java src/com/habitly/model/*.java src/com/habitly/data/*.java src/com/habitly/config/*.java src/com/habitly/utils/*.java src/com/habitly/services/*.java
+   javac -d out -cp "out;lib/*" -sourcepath tests tests/*.java
    ```
 
 3. **Ejecutar la aplicación**:
@@ -40,13 +41,13 @@
 > [!WARNING]
 > **Solución de problemas (Troubleshooting):** Si al ejecutar el proyecto recibes el error `UnsupportedClassVersionError`, significa que la versión global de Java de tu sistema es demasiado antigua (ej. Java 8). Para solucionarlo, asegúrate de actualizar tus variables de entorno `PATH` para que apunten a tu JDK 17 o superior.
 
-## 🧪 Pruebas de Cumplimiento (Compliance QA Testing)
+## 🧪 Pruebas de Cumplimiento (Compliance QA Testing con JUnit 5)
 
-Habitly v1.0 cuenta con una suite completa (`ValidadorLegalCompliance`) que audita en tiempo real que todas las reglas legales sobre índices de renta, fianza, renovaciones y duraciones mínimas se respeten en el sistema.
+Habitly v1.1 cuenta con una suite completa de pruebas unitarias y de integración migradas a **JUnit 5**, que audita en tiempo real que todas las reglas legales sobre índices de renta, fianza, renovaciones y duraciones mínimas se respeten en el sistema.
 
-Ejecutar la auditoría legal interactiva:
+Ejecutar la suite de pruebas JUnit 5:
 ```bash
-java -cp out com.habitly.test.ValidadorLegalCompliance
+java -cp "out;lib/*" org.junit.platform.console.ConsoleLauncher execute --scan-class-path
 ```
 
 ---
@@ -70,6 +71,7 @@ java -cp out com.habitly.test.ValidadorLegalCompliance
 * **🏦 Security Deposit & Guarantees (ICAVI):** Strict validation of security deposits (exactly 1 month) and additional guarantees (max 2 months), with active tracking of pending official deposits with the ICAVI.
 * **📊 Owner Profit Dashboard:** Live calculation of net margins (total rental income minus registered housing expenses).
 * **🔐 Military-Grade AES-GCM Persistence:** Professional-grade persistence via **AES-256 in GCM mode**, featuring PBKDF2 key derivation and dynamic salting. Data is stored in a tamper-proof encrypted binary file, strictly protecting user privacy.
+* **🛡️ Robust Data Integrity:** Intelligent cascading deletion prevention (no orphan data allowed), unique cryptographic identifiers (UUIDs), and strict input validation using Regular Expressions (Regex) for Spanish IDs and emails.
 
 ## 🛠️ Installation & Usage
 
@@ -80,8 +82,8 @@ java -cp out com.habitly.test.ValidadorLegalCompliance
 
 2. **Compile the project**:
    ```bash
-   javac -d out -sourcepath src src/com/habitly/ui/Habitly.java src/com/habitly/model/*.java src/com/habitly/data/*.java src/com/habitly/config/*.java
-   javac -d out -cp out -sourcepath tests tests/*.java
+   javac -d out -sourcepath src src/com/habitly/ui/Habitly.java src/com/habitly/model/*.java src/com/habitly/data/*.java src/com/habitly/config/*.java src/com/habitly/utils/*.java src/com/habitly/services/*.java
+   javac -d out -cp "out;lib/*" -sourcepath tests tests/*.java
    ```
 
 3. **Run the application**:
@@ -94,13 +96,13 @@ java -cp out com.habitly.test.ValidadorLegalCompliance
 > [!WARNING]
 > **Troubleshooting:** If you receive an `UnsupportedClassVersionError` upon running the application, it means your system's global Java version is outdated (e.g. Java 8). To fix this, ensure your `PATH` environment variable points to your JDK 17 or newer installation.
 
-## 🧪 Compliance QA Testing
+## 🧪 Compliance QA Testing (JUnit 5)
 
-To ensure legal stability, v1.0 includes automated suites (such as `ValidadorLegalCompliance`) that verify the blocking of abusive rents, minimum duration limits, security deposit capping, and tacit extension rules.
+To ensure legal stability, v1.1 includes automated JUnit 5 suites that verify the blocking of abusive rents, minimum duration limits, security deposit capping, and tacit extension rules.
 
-Run the Compliance Audit Suite:
+Run the JUnit 5 Compliance Audit Suite:
 ```bash
-java -cp out com.habitly.test.ValidadorLegalCompliance
+java -cp "out;lib/*" org.junit.platform.console.ConsoleLauncher execute --scan-class-path
 ```
 
 ---

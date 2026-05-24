@@ -7,7 +7,7 @@ import java.time.LocalDate;
  * Representa un contrato de arrendamiento bajo la Ley 12/2023.
  * Gestiona duraciones legales, rentas y estados de fianza (ICAVI).
  * * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  */
 public class ContratoAlquiler implements Serializable {
 
@@ -46,7 +46,7 @@ public class ContratoAlquiler implements Serializable {
 
     public ContratoAlquiler(String direccionVivienda, String dniInquilino, TipoArrendador tipo,
                             double renta, int meses, char serie) {
-        this.idContrato = "CON-" + serie + "-" + System.currentTimeMillis() % 10000;
+        this.idContrato = "CON-" + serie + "-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.direccionVivienda = direccionVivienda;
         this.dniInquilino = dniInquilino;
         this.tipoArrendador = tipo;

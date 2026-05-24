@@ -4,7 +4,7 @@ package com.habitly.model;
  * Representa a un usuario con rol de dueño de inmuebles.
  * Gestiona la titularidad de las viviendas y su naturaleza jurídica (Persona/Empresa).
  * * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  * @since 1.0.3
  */
 
@@ -12,8 +12,8 @@ public class Propietario extends Usuario {
 
     private boolean esEmpresa;
 
-    public Propietario(String dni, String nombre, int telefono, String email, boolean esEmpresa) {
-        super(dni, nombre, telefono, email);
+    public Propietario(String dni, String nombre, String telefono, String email, boolean esEmpresa, String passwordHash, String passwordSalt) {
+        super(dni, nombre, telefono, email, passwordHash, passwordSalt);
         this.esEmpresa = esEmpresa;
     }
 

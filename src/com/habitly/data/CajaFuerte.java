@@ -18,11 +18,19 @@ public class CajaFuerte implements Serializable {
     //ID de versión estático
     private static final long serialVersionUID = 1L;
 
-    public ArrayList<Vivienda> listaViviendas;
-    public HashMap<String, Usuario> mapaUsuarios;
+    private ArrayList<Vivienda> listaViviendas;
+    private HashMap<String, Usuario> mapaUsuarios;
 
     public CajaFuerte(ArrayList<Vivienda> viviendas, HashMap<String, Usuario> usuarios) {
         this.listaViviendas = viviendas;
         this.mapaUsuarios = usuarios;
+    }
+
+    public ArrayList<Vivienda> getListaViviendas() {
+        return listaViviendas;
+    }
+
+    public HashMap<String, Usuario> getMapaUsuarios() {
+        return mapaUsuarios;
     }
 }

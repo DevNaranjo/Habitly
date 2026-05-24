@@ -4,7 +4,7 @@ package com.habitly.model;
  * Representa a un usuario con rol de arrendatario.
  * Incluye atributos de calificación crediticia y solvencia para el filtrado de alquileres.
  * * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  * @since 1.0.3
  */
 
@@ -16,8 +16,8 @@ public class Inquilino extends Usuario {
     // Atributo específico: Puntuación de solvencia (0-100)
     private int solvencia;
 
-    public Inquilino(String dni, String nombre, int telefono, String email, int solvencia) {
-        super(dni, nombre, telefono, email);
+    public Inquilino(String dni, String nombre, String telefono, String email, int solvencia, String passwordHash, String passwordSalt) {
+        super(dni, nombre, telefono, email, passwordHash, passwordSalt);
         this.solvencia = comprobarSolvencia(solvencia);
     }
 

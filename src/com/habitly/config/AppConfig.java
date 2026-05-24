@@ -7,7 +7,7 @@ import java.io.File;
  * Centraliza las rutas de persistencia de datos y constantes fiscales aplicables.
  * 
  * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  * @since 1.0.0
  */
 public class AppConfig {
@@ -24,6 +24,11 @@ public class AppConfig {
 
     //Construye la ruta de la carpeta según el Sistema Operativo.
     public static String getStoragePath() {
+        String env = System.getProperty("habitly.env", "production");
+        if ("test".equals(env)) {
+            return System.getProperty("java.io.tmpdir") + File.separator + "HabitlyTestTemp";
+        }
+
         String userHome = System.getProperty("user.home");
         String os = System.getProperty("os.name").toLowerCase();
         String path;

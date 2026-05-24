@@ -5,7 +5,7 @@ package com.habitly.model;
  * según la Ley de Arrendamientos Urbanos (LAU).
  * 
  * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  * @since 1.0.6
  */
 public enum EstadoContrato {

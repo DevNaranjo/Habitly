@@ -1,16 +1,13 @@
 package com.habitly.data;
 
-import com.habitly.model.EstadoVivienda;
-import com.habitly.model.Usuario;
-import com.habitly.model.Vivienda;
-import com.habitly.model.ContratoAlquiler;
-import com.habitly.model.Gasto;
-import com.habitly.model.TipoArrendador;
-import java.io.*;
+import com.habitly.model.*;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.time.LocalDate;
+import com.habitly.config.AppConfig;
 
 /**
  * Motor central de lógica de negocio y persistencia.
@@ -18,7 +15,7 @@ import java.time.LocalDate;
  * en disco mediante cifrado AES.
  * v1.0.5: Añade soporte para cumplimiento legal (Etapa 5) y mantiene retrocompatibilidad.
  * @author DevNaranjo
- * @version 1.0.6
+ * @version 1.0.7-F
  * @since 1.0.0
  */
 public class GestorInventario {
@@ -27,8 +24,7 @@ public class GestorInventario {
     private HashMap<String, Usuario> usuarios;
     private Usuario usuarioIdentificado;
 
-    private final String CARPETA_DATA = "data";
-    private final String RUTA_SISTEMA = CARPETA_DATA + File.separator + "sistema.dat";
+    // La configuración de rutas se delega a AppConfig
 
     public GestorInventario() {
         this.inventario = new ArrayList<>();
@@ -42,16 +38,15 @@ public class GestorInventario {
      * Serializa el inventario y los usuarios, aplica cifrado AES-128
      * y guarda el resultado en el repositorio local.
      */
-    public void guardarDatos() {
+    public boolean guardarDatos() {
         try {
-            File directorio = new File(CARPETA_DATA);
-            if (!directorio.exists()) {
-                directorio.mkdirs();
-            }
+            AppConfig.asegurarDirectorio();
             CajaFuerte maleta = new CajaFuerte(this.inventario, this.usuarios);
-            CryptoManager.guardarObjetoCifrado(maleta, RUTA_SISTEMA);
+            CryptoManager.guardarObjetoCifrado(maleta, AppConfig.getFullFilePath());
+            return true;
         } catch (Exception e) {
             System.err.println("Error crítico al cifrar los datos: " + e.getMessage());
+            return false;
         }
     }
 
@@ -59,13 +54,14 @@ public class GestorInventario {
      * Recupera y descifra el archivo de sistema desde /data.
      */
     public void cargarDatos() {
-        File archivo = new File(RUTA_SISTEMA);
+        AppConfig.asegurarDirectorio();
+        File archivo = new File(AppConfig.getFullFilePath());
         if (archivo.exists() && archivo.length() > 0) {
             try {
-                Object cargado = CryptoManager.leerObjetoCifrado(RUTA_SISTEMA);
+                Object cargado = CryptoManager.leerObjetoCifrado(AppConfig.getFullFilePath());
                 if (cargado instanceof CajaFuerte maleta) {
-                    if (maleta.listaViviendas != null) this.inventario = maleta.listaViviendas;
-                    if (maleta.mapaUsuarios != null) this.usuarios = maleta.mapaUsuarios;
+                    if (maleta.getListaViviendas() != null) this.inventario = maleta.getListaViviendas();
+                    if (maleta.getMapaUsuarios() != null) this.usuarios = maleta.getMapaUsuarios();
                 }
             } catch (Exception e) {
                 System.err.println("[!] Error al descifrar el archivo de datos.");
@@ -81,7 +77,7 @@ public class GestorInventario {
         this.inventario.clear();
         this.usuarios.clear();
         this.usuarioIdentificado = null;
-        File archivo = new File(RUTA_SISTEMA);
+        File archivo = new File(AppConfig.getFullFilePath());
         if (archivo.exists()) {
             return archivo.delete();
         }
@@ -118,11 +114,23 @@ public class GestorInventario {
      * @return true si se eliminó con éxito.
      */
     public boolean eliminarUsuario(String dni) {
-        if (usuarios.containsKey(dni)) {
-            usuarios.remove(dni);
-            return true;
+        if (!usuarios.containsKey(dni)) return false;
+        
+        Usuario u = usuarios.get(dni);
+        if (u instanceof Propietario) {
+            if (!getViviendasPorDueño(dni).isEmpty()) {
+                System.out.println("[!] ERROR DE INTEGRIDAD: No se puede eliminar a un Propietario que tiene viviendas registradas.");
+                return false;
+            }
+        } else if (u instanceof Inquilino) {
+            if (getViviendaDeInquilino(dni) != null) {
+                System.out.println("[!] ERROR DE INTEGRIDAD: No se puede eliminar a un Inquilino con un contrato de alquiler activo.");
+                return false;
+            }
         }
-        return false;
+        
+        usuarios.remove(dni);
+        return true;
     }
 
     // --- MÉTODOS DE LÓGICA DE NEGOCIO (ETAPA 5) ---
@@ -134,6 +142,11 @@ public class GestorInventario {
     public String formalizarContrato(ContratoAlquiler contrato, Vivienda vivienda) {
         if (vivienda.getEstado() != EstadoVivienda.DISPONIBLE) {
             return "ERROR: La vivienda no está disponible para alquiler.";
+        }
+        
+        Usuario futuroInq = obtenerUsuario(contrato.getDniInquilino());
+        if (futuroInq == null || !(futuroInq instanceof Inquilino)) {
+            return "ERROR DE INTEGRIDAD: El usuario especificado no existe o no tiene el rol de Inquilino.";
         }
         if (contrato.getRentaMensual() > vivienda.getLimiteMaximoIrav()) {
             return "ERROR LEGAL: La renta propuesta supera el límite máximo del índice IRAV ("
@@ -278,15 +291,15 @@ public class GestorInventario {
     public Usuario getUsuarioIdentificado() { return usuarioIdentificado; }
 
     public List<Usuario> obtenerTodosLosUsuarios() {
-        return new ArrayList<>(usuarios.values());
+        return Collections.unmodifiableList(new ArrayList<>(usuarios.values()));
     }
 
     public void añadirVivienda(Vivienda v) {
         if (v != null) inventario.add(v);
     }
 
-    public ArrayList<Vivienda> getInventario() {
-        return inventario;
+    public List<Vivienda> getInventario() {
+        return Collections.unmodifiableList(inventario);
     }
 
     /**
