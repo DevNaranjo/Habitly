@@ -1,108 +1,96 @@
-# 🏠 Habitly - Sistema de Gestión Inmobiliaria (v1.0)
+# 🏠 Habitly - Sistema de Gestión Inmobiliaria (v1.1.0-F GUI)
 
-**Habitly** es una aplicación CLI (Interfaz de Línea de Comandos) profesional basada en Java diseñada para la gestión integral de activos inmobiliarios. Con la versión **1.0**, el sistema se consolida implementando un motor completo de **Cumplimiento Legal (Compliance)** ajustado a la legislación española (Ley 12/2023 por el Derecho a la Vivienda) y la LAU, incorporando cálculos fiscales, dashboards de beneficios y una suite de pruebas automatizadas.
+**Habitly** es una aplicación profesional de escritorio diseñada para la gestión integral de activos inmobiliarios. Con la versión **v1.1.0-F (Full GUI)**, el sistema evoluciona de la consola a una **interfaz gráfica premium interactiva (Dark Mode)**, integrando un motor de **Cumplimiento Legal (Compliance)** ajustado a la Ley de Vivienda de España (Ley 12/2023) y la LAU, incorporando cálculos fiscales, dashboards de rentabilidad y un asistente de instalación autoejecutable para Windows.
 
 ---
 
-## 🚀 Características Principales (v1.0)
+## 🚀 Características Principales (v1.1.0-F)
 
-* **⚖️ Cumplimiento Legal (Ley 12/2023 y LAU 2026):** Motor de validación de contratos que bloquea automáticamente cualquier alquiler que supere el límite legal de renta mensual establecido por el índice **IRAV** para zonas tensionadas.
+* **🖥️ Interfaz Gráfica Premium (Dark Mode):** Una UI interactiva construida sobre Java Swing con una paleta de colores oscura (Slate Theme) muy moderna. Cuenta con efectos de foco realzados, barras de navegación laterales, diseño responsivo y tablas con anchos mínimos configurados.
+* **📦 Asistente de Instalación Windows (`wizardSetUp.exe`):** Distribución simplificada mediante un instalador tipo Wizard ("Siguiente, Siguiente, Instalar"). Empaqueta su propio JRE (Java Runtime Environment) reducido, por lo que **no es necesario tener Java instalado en el ordenador** para ejecutar Habitly.
+* **⚖️ Cumplimiento Legal (Ley 12/2023 y LAU):** Motor de validación de contratos que bloquea automáticamente cualquier alquiler que supere el límite legal de renta mensual establecido por el índice oficial **IRAV** para zonas tensionadas.
 * **📜 Ciclo de Vida del Contrato:** La entidad `ContratoAlquiler` fuerza automáticamente la normativa:
     * **Duración Mínima:** 5 años para personas físicas y 7 años para entidades jurídicas (Art. 9 LAU).
     * **Desistimiento:** Verifica el mínimo obligatorio de 6 meses antes de permitir salidas unilaterales.
     * **Prórroga Tácita:** Extensión automática anual del contrato hasta un límite legal de 3 años (Art. 10 LAU).
     * **Actualización Anual de Renta:** Reajuste automático en la fecha de aniversario utilizando el índice oficial.
 * **🇮🇨 Fiscalidad de Canarias (IGIC):** Núcleo financiero adaptado, que aplica automáticamente la **exención del IGIC (0%)** en viviendas de alquiler habitual, manteniendo el soporte para alquileres turísticos.
-* **🏦 Fianzas y Garantías (ICAVI):** Validación estricta del depósito legal (exactamente 1 mes) y garantías adicionales (máximo 2 meses), con seguimiento en tiempo real de los depósitos pendientes de registro oficial en el ICAVI.
-* **📊 Dashboard de Beneficios del Propietario:** Cálculo en tiempo real del margen neto (ingresos de alquiler totales menos gastos registrados) de manera consolidada y por unidad.
-* **🔐 Persistencia Cifrada de Grado Militar (AES-GCM):** Almacenamiento súper seguro mediante AES-256 en modo GCM, con derivación de clave por PBKDF2 y salting dinámico. Los datos se guardan en un archivo binario validado contra manipulaciones externas, protegiendo absolutamente la privacidad.
-* **🛡️ Integridad de Datos y Prevención de Errores:** Bloqueo inteligente de borrado en cascada (no se permiten datos huérfanos), identificadores criptográficos únicos (UUIDs) y validación estricta de entradas mediante Expresiones Regulares (Regex) para DNIs y correos electrónicos.
+* **🏦 Fianzas y Garantías (ICAVI):** Validación estricta del depósito legal (exactamente 1 mes) y garantías adicionales (máximo 2 meses), con seguimiento de los depósitos oficiales en el ICAVI.
+* **📊 Dashboard de Rentabilidad:** Visualización interactiva en tiempo real del margen neto (ingresos de alquiler totales menos gastos registrados) de manera consolidada y por unidad.
+* **🔐 Cifrado de Contraseñas y Seguridad (AES-GCM):** Almacenamiento súper seguro mediante AES-256 en modo GCM, con derivación de clave por PBKDF2 y salting dinámico. Las contraseñas en memoria se manejan estrictamente como arrays `char[]` para evitar fugas y volcados de memoria (Garbage Collector).
+
+---
 
 ## 🛠️ Instalación y Uso
 
-1. **Clonar el repositorio**:
-   ```bash
-   git clone https://github.com/DevNaranjo/Habitly.git
-   ```
+La versión **v1.1.0-F** está pensada para ser instalada directamente en Windows sin requerir configuraciones de entorno de desarrollo:
 
-2. **Compilar el proyecto (JDK 17+ u OpenJDK 25)**:
-   ```bash
-   javac -d out -sourcepath src src/com/habitly/ui/Habitly.java src/com/habitly/model/*.java src/com/habitly/data/*.java src/com/habitly/config/*.java src/com/habitly/utils/*.java src/com/habitly/services/*.java
-   javac -d out -cp "out;lib/*" -sourcepath tests tests/*.java
-   ```
+1. **Descarga el instalador**:
+   Descarga el archivo `wizardSetUp.exe` disponible en este repositorio.
+2. **Ejecuta el asistente**:
+   Haz doble clic sobre `wizardSetUp.exe` y sigue el asistente de instalación interactivo.
+3. **Inicia la aplicación**:
+   El instalador creará un acceso directo en tu Escritorio y en tu menú de Inicio con el logotipo oficial de Habitly.
 
-3. **Ejecutar la aplicación**:
-   ```bash
-   java -cp out com.habitly.ui.Habitly
-   ```
-
-*Nota: Al ejecutarse por primera vez, el asistente inicial te guiará para registrar el primer administrador. También dispone de un **Modo Invitado (Sandbox)** para explorar de forma segura y sin dejar rastro en disco.*
-
-> [!WARNING]
-> **Solución de problemas (Troubleshooting):** Si al ejecutar el proyecto recibes el error `UnsupportedClassVersionError`, significa que la versión global de Java de tu sistema es demasiado antigua (ej. Java 8). Para solucionarlo, asegúrate de actualizar tus variables de entorno `PATH` para que apunten a tu JDK 17 o superior.
+---
 
 ## 🧪 Pruebas de Cumplimiento (Compliance QA Testing con JUnit 5)
 
-Habitly v1.1 cuenta con una suite completa de pruebas unitarias y de integración migradas a **JUnit 5**, que audita en tiempo real que todas las reglas legales sobre índices de renta, fianza, renovaciones y duraciones mínimas se respeten en el sistema.
+Habitly cuenta con una suite completa de pruebas unitarias y de integración de cumplimiento legal migradas a **JUnit 5**.
 
-Ejecutar la suite de pruebas JUnit 5:
-```bash
-java -cp "out;lib/*" org.junit.platform.console.ConsoleLauncher execute --scan-class-path
+Ejecutar la suite de pruebas JUnit 5 en entorno de desarrollo:
+```powershell
+.\run.bat
+java -jar lib/junit-platform-console-standalone-1.10.2.jar --class-path out --scan-class-path
 ```
 
 ---
 ---
 
-# 🏠 Habitly - Property Management System (v1.0)
+# 🏠 Habitly - Property Management System (v1.1.0-F GUI)
 
-**Habitly** is a professional Java-based CLI application designed for comprehensive real estate asset management. With **version 1.0**, the system reaches a major milestone by establishing a full **Legal Compliance Engine** adhering to Spanish housing rules (Ley 12/2023 por el Derecho a la Vivienda) and lease regulations (LAU), featuring tax adaptations, profit dashboards, and automated compliance testing.
+**Habitly** is a professional desktop application designed for comprehensive real estate asset management. With **version v1.1.0-F (Full GUI)**, the system transitions from a CLI to a **premium interactive Graphical User Interface (Dark Mode)**. It features a built-in **Legal Compliance Engine** complying with Spanish housing regulations (Law 12/2023) and lease laws (LAU), financial dashboards, and a Windows installation wizard.
 
 ---
 
-## 🚀 Key Features (v1.0)
+## 🚀 Key Features (v1.1.0-F)
 
-* **⚖️ Legal Compliance (Law 12/2023 & LAU 2026):** Fully updated contract validation engines. The system automatically blocks any lease contract that exceeds the legal monthly rent limit established under the **IRAV** index for the property.
-* **📜 LAU Contract Lifecycle:** The `ContratoAlquiler` entity automatically enforces:
-    * **Minimum Legal Duration:** 5 years for natural persons; 7 years for legal entities/companies (Art. 9 LAU).
-    * **Tenant Lease Exit:** Verifies a minimum 6-month threshold before permitting unilateral lease exits.
+* **🖥️ Premium Graphical Interface (Dark Mode):** An interactive UI built on Java Swing with a modern slate-color palette. It features real-time focus highlights, navigation sidebars, and responsive tables with optimized column spacing.
+* **📦 Windows Setup Wizard (`wizardSetUp.exe`):** Out-of-the-box Windows installer. It bundles a reduced Java Runtime Environment (JRE), meaning **pre-installing Java is not required** on the target computer.
+* **⚖️ Legal Compliance (Law 12/2023 & LAU):** Automatically blocks any lease contract that exceeds the legal monthly rent limit established under the official **IRAV** index for stressed areas.
+* **📜 LAU Lease Lifecycle:** Enforces all lease regulations:
+    * **Minimum Legal Duration:** 5 years for natural persons; 7 years for companies (Art. 9 LAU).
+    * **Tenant Lease Exit:** Verifies a minimum 6-month threshold before permitting unilateral exits.
     * **Tacit Extensions (Prórroga Tácita):** Automated annual contract extensions up to a maximum legal cap of 3 years (Art. 10 LAU).
-    * **Annual Rent Re-adjustments:** Automates rent updates on the anniversary date of the contract.
-* **🇮🇨 Canary Islands Taxation (IGIC):** Optimized financial core complying with local tax regulations, recognizing that residential rental for primary residence is **exempt from IGIC** (0%), while keeping support for tourist rental tax calculations.
-* **🏦 Security Deposit & Guarantees (ICAVI):** Strict validation of security deposits (exactly 1 month) and additional guarantees (max 2 months), with active tracking of pending official deposits with the ICAVI.
-* **📊 Owner Profit Dashboard:** Live calculation of net margins (total rental income minus registered housing expenses).
-* **🔐 Military-Grade AES-GCM Persistence:** Professional-grade persistence via **AES-256 in GCM mode**, featuring PBKDF2 key derivation and dynamic salting. Data is stored in a tamper-proof encrypted binary file, strictly protecting user privacy.
-* **🛡️ Robust Data Integrity:** Intelligent cascading deletion prevention (no orphan data allowed), unique cryptographic identifiers (UUIDs), and strict input validation using Regular Expressions (Regex) for Spanish IDs and emails.
+    * **Annual Rent Re-adjustments:** Automates rent updates on the anniversary date.
+* **🇮🇨 Canary Islands Taxation (IGIC):** Optimized financial core applying **IGIC exemption (0%)** for primary residences, keeping support for tourist rental tax calculations.
+* **🏦 Security Deposits (ICAVI):** Strict validation of security deposits (exactly 1 month) and additional guarantees (max 2 months), with active tracking of official deposits with the ICAVI.
+* **📊 Profit Dashboard:** Live calculation of owner net margins (total rental income minus registered housing expenses).
+* **🔐 Password Encryption & Memory Safety (AES-GCM):** Data is encrypted via AES-256 in GCM mode and PBKDF2. Passwords in memory are handled strictly as `char[]` arrays to eliminate potential memory dumps.
+
+---
 
 ## 🛠️ Installation & Usage
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/DevNaranjo/Habitly.git
-   ```
+Version **v1.1.0-F** is designed to run directly on Windows without development environment configurations:
 
-2. **Compile the project**:
-   ```bash
-   javac -d out -sourcepath src src/com/habitly/ui/Habitly.java src/com/habitly/model/*.java src/com/habitly/data/*.java src/com/habitly/config/*.java src/com/habitly/utils/*.java src/com/habitly/services/*.java
-   javac -d out -cp "out;lib/*" -sourcepath tests tests/*.java
-   ```
+1. **Download the installer**:
+   Download `wizardSetUp.exe` from this repository.
+2. **Run the setup**:
+   Double-click `wizardSetUp.exe` and follow the setup wizard steps.
+3. **Launch the application**:
+   The installer will place a desktop shortcut and a Start Menu icon for easy launch.
 
-3. **Run the application**:
-   ```bash
-   java -cp out com.habitly.ui.Habitly
-   ```
-
-*Note: On your first run, the Setup Wizard will guide you. You can also enter the sandboxed **Guest Mode** to explore features securely with read-only privileges.*
-
-> [!WARNING]
-> **Troubleshooting:** If you receive an `UnsupportedClassVersionError` upon running the application, it means your system's global Java version is outdated (e.g. Java 8). To fix this, ensure your `PATH` environment variable points to your JDK 17 or newer installation.
+---
 
 ## 🧪 Compliance QA Testing (JUnit 5)
 
-To ensure legal stability, v1.1 includes automated JUnit 5 suites that verify the blocking of abusive rents, minimum duration limits, security deposit capping, and tacit extension rules.
+Habitly includes automated JUnit 5 suites that verify the compliance of lease limits, deposit caps, and extensions.
 
 Run the JUnit 5 Compliance Audit Suite:
-```bash
-java -cp "out;lib/*" org.junit.platform.console.ConsoleLauncher execute --scan-class-path
+```powershell
+.\run.bat
+java -jar lib/junit-platform-console-standalone-1.10.2.jar --class-path out --scan-class-path
 ```
 
 ---

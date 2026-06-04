@@ -1,0 +1,7 @@
+# Ignorar todo el código fuente, librerías, clases y recursos
+*
+
+# Permitir únicamente el instalador compilado y los archivos de configuración de Git
+!wizardSetUp.exe
+!.gitignore
+!README.md

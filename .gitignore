@@ -1,57 +1,9 @@
-# --- IntelliJ & IDE ---
-.idea/
-*.iml
-out/
-gen/
-# Evita que las configuraciones de usuario ensucien el repo
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/shelf/
-.idea/inspectionProfiles/
-.idea/dictionaries/
-.idea/libraries/
+# Ignorar todo por defecto en el repositorio
+*
 
-# --- Compilados Java ---
-*.class
-bin/
-build/
-target/
-*.jar
-*.war
-*.ear
-
-# --- Persistencia y Datos (v1.0.4) ---
-# Bloqueamos el archivo de datos real para que el repo baje "limpio"
-sistema.dat
-*.bin
-*.ser
-*.dat
-# Mantenemos carpetas de almacenamiento local bloqueadas
-storage/
-data/
-
-# --- Logs y Temporales ---
-*.log
-*.tmp
-*.temp
-.history/
-
-# --- Testing ---
-# Ignoramos reportes de cobertura o carpetas temporales de test
-.gradle/
-.settings/
-test-results/
-target/surefire-reports/
-
-# --- Sistema Operativo ---
-.DS_Store
-Thumbs.db
-desktop.ini
-.directory
-.nfs*
-
-# --- Notas de Estructura (EXCEPCIONES) ---
-# Forzamos que se mantengan estas carpetas aunque estén vacías
-!archive/
-!docs/
-!devlog/
+# Permitir explícitamente el instalador y la documentación básica
+!wizardSetUp.exe
+!.gitignore
+!README.md
+!README_ES.md
+!readme.md
