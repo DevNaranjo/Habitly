@@ -1,9 +1,17 @@
 # Ignorar todo por defecto en el repositorio
 *
 
-# Permitir explícitamente el instalador y la documentación básica
+# Permitir el instalador y la documentación
 !wizardSetUp.exe
 !.gitignore
 !README.md
 !README_ES.md
 !readme.md
+
+# Permitir la carpeta de pruebas unitarias de JUnit
+!tests/
+!tests/**
+
+# Permitir la carpeta de librerías para ejecutar JUnit
+!lib/
+!lib/**
