@@ -17,8 +17,8 @@ public class HabitlyPersistenciaTest {
         GestorInventario gestor = new GestorInventario();
         gestor.borrarDatosAplicacion();
 
-        Piso p1 = new Piso("PROPIETARIO_01", "Calle Real 10", 750.0, 60.0, 2, 1, false, false, true, "Bueno", 1, "A");
-        Casa c1 = new Casa("PROPIETARIO_01", "Urb. El Bosque", 1500.0, 200.0, 4, 3, true, true, false, "Excelente", 600.0);
+        Piso p1 = new Piso("PROPIETARIO_01", "Calle Real 10", java.math.BigDecimal.valueOf(750.0), 60.0, 2, 1, false, false, true, "Bueno", 1, "A");
+        Casa c1 = new Casa("PROPIETARIO_01", "Urb. El Bosque", java.math.BigDecimal.valueOf(1500.0), 200.0, 4, 3, true, true, false, "Excelente", 600.0);
 
         gestor.añadirVivienda(p1);
         gestor.añadirVivienda(c1);

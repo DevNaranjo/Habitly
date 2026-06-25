@@ -20,4 +20,14 @@ public class UsuarioTest {
         assertEquals("Juan Prueba", inq.getNombre());
         assertEquals("B99887766", prop.getDni());
     }
+
+    @Test
+    public void testAdministradorModel() {
+        Propietario admin = new Propietario("87654321Y", "Admin Test", "600987654", "admin@mail.com", false, "hash", "salt");
+        admin.setEsAdministrador(true);
+        assertTrue(admin instanceof Usuario);
+        assertTrue(admin.isEsAdministrador());
+        assertEquals("PROPIETARIO", admin.getTipoUsuario());
+        assertEquals("Admin Test", admin.getNombre());
+    }
 }

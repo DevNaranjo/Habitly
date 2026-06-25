@@ -15,33 +15,33 @@ public class ValidadorLegalComplianceTest {
     @Test
     public void testLimiteRentaIRAV() {
         GestorInventario motor = new GestorInventario();
-        Piso v = new Piso("ID_PROPIETARIO", "Av. Marítima, LPGC", 900, 80, 3, 2, true, false, true, "Reformado", 1, "A");
-        v.setLimiteMaximoIrav(950.0);
+        Piso v = new Piso("ID_PROPIETARIO", "Av. Marítima, LPGC", java.math.BigDecimal.valueOf(900.0), 80, 3, 2, true, false, true, "Reformado", 1, "A");
+        v.setLimiteMaximoIrav(java.math.BigDecimal.valueOf(950.0));
 
         Inquilino inq = new Inquilino("12345678X", "Juan", "123", "j@j.com", 90, "hash", "salt");
         motor.añadirUsuario(inq);
 
-        ContratoAlquiler cIlegal = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, 1100.0, 60, 'B');
+        ContratoAlquiler cIlegal = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(1100.0), 60, 'B');
         String respuesta = motor.formalizarContrato(cIlegal, v).getMessage();
         assertTrue(respuesta.startsWith("ERROR LEGAL"));
     }
 
     @Test
     public void testProrrogaLegalSegunArrendador() {
-        ContratoAlquiler cEmpresa = new ContratoAlquiler("Ref_A", "B12345678", TipoArrendador.JURIDICO, 1200, 60, 'A');
+        ContratoAlquiler cEmpresa = new ContratoAlquiler("Ref_A", "B12345678", TipoArrendador.JURIDICO, java.math.BigDecimal.valueOf(1200.0), 60, 'A');
         assertFalse(cEmpresa.cumpleDuracionMinimaLegal());
     }
 
     @Test
     public void testDepositoFianzasICAVI() {
         GestorInventario motor = new GestorInventario();
-        Casa v = new Casa("ID_DUEÑO", "Santa Cruz de Tenerife", 600, 50, 2, 1, false, false, false, "Bueno", 100.0);
-        v.setLimiteMaximoIrav(800.0);
+        Casa v = new Casa("ID_DUEÑO", "Santa Cruz de Tenerife", java.math.BigDecimal.valueOf(600.0), 50, 2, 1, false, false, false, "Bueno", 100.0);
+        v.setLimiteMaximoIrav(java.math.BigDecimal.valueOf(800.0));
 
         Inquilino inq = new Inquilino("99999999R", "Pedro", "123", "p@p.com", 90, "hash", "salt");
         motor.añadirUsuario(inq);
 
-        ContratoAlquiler c = new ContratoAlquiler(v.getDireccion(), "99999999R", TipoArrendador.FISICO, 700, 60, 'D');
+        ContratoAlquiler c = new ContratoAlquiler(v.getDireccion(), "99999999R", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(700.0), 60, 'D');
         motor.añadirVivienda(v);
         motor.formalizarContrato(c, v);
 
@@ -53,50 +53,50 @@ public class ValidadorLegalComplianceTest {
     @Test
     public void testFianzaLegalYGarantias() {
         GestorInventario motor = new GestorInventario();
-        Piso v = new Piso("ID_PROP", "Mesa y Lopez, LPGC", 800, 70, 2, 1, false, false, true, "Reformado", 2, "B");
-        v.setLimiteMaximoIrav(900.0);
+        Piso v = new Piso("ID_PROP", "Mesa y Lopez, LPGC", java.math.BigDecimal.valueOf(800.0), 70, 2, 1, false, false, true, "Reformado", 2, "B");
+        v.setLimiteMaximoIrav(java.math.BigDecimal.valueOf(900.0));
         motor.añadirVivienda(v);
 
         Inquilino inq = new Inquilino("12345678X", "Juan", "123", "j@j.com", 90, "hash", "salt");
         motor.añadirUsuario(inq);
 
         // 1. Fianza errónea
-        ContratoAlquiler cFianzaErronea = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, 800.0, 60, 'E', 700.0, 0.0);
+        ContratoAlquiler cFianzaErronea = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(800.0), 60, 'E', java.math.BigDecimal.valueOf(700.0), java.math.BigDecimal.ZERO);
         String res1 = motor.formalizarContrato(cFianzaErronea, v).getMessage();
         assertTrue(res1.startsWith("ERROR LEGAL"));
 
         // 2. Garantías excesivas
-        ContratoAlquiler cGarantiaErronea = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, 800.0, 60, 'F', 800.0, 1700.0);
+        ContratoAlquiler cGarantiaErronea = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(800.0), 60, 'F', java.math.BigDecimal.valueOf(800.0), java.math.BigDecimal.valueOf(1700.0));
         String res2 = motor.formalizarContrato(cGarantiaErronea, v).getMessage();
         assertTrue(res2.startsWith("ERROR LEGAL"));
 
         // 3. Contrato correcto
-        ContratoAlquiler cCorrecto = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, 800.0, 60, 'G', 800.0, 1600.0);
+        ContratoAlquiler cCorrecto = new ContratoAlquiler(v.getDireccion(), "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(800.0), 60, 'G', java.math.BigDecimal.valueOf(800.0), java.math.BigDecimal.valueOf(1600.0));
         String res3 = motor.formalizarContrato(cCorrecto, v).getMessage();
         assertTrue(res3.startsWith("ÉXITO"));
     }
 
     @Test
     public void testActualizacionIRAV() {
-        ContratoAlquiler c = new ContratoAlquiler("Calle Triana", "12345678X", TipoArrendador.FISICO, 1000.0, 60, 'A');
+        ContratoAlquiler c = new ContratoAlquiler("Calle Triana", "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(1000.0), 60, 'A');
 
         // 1. Sin aniversario y sin forzar
         assertFalse(c.aplicarActualizacionIRAV(2.5, false));
 
         // 2. Sin aniversario pero forzando
         assertTrue(c.aplicarActualizacionIRAV(2.5, true));
-        assertEquals(1025.0, c.getRentaMensual(), 0.01);
+        assertEquals(1025.0, c.getRentaMensual().doubleValue(), 0.01);
 
         // 3. Simular aniversario (1 año en el pasado)
-        c.setRentaMensual(1000.0);
+        c.setRentaMensual(java.math.BigDecimal.valueOf(1000.0));
         c.setFechaFirma(LocalDate.now().minusYears(1));
         assertTrue(c.aplicarActualizacionIRAV(3.0, false));
-        assertEquals(1030.0, c.getRentaMensual(), 0.01);
+        assertEquals(1030.0, c.getRentaMensual().doubleValue(), 0.01);
     }
 
     @Test
     public void testProrrogaTacita() {
-        ContratoAlquiler c = new ContratoAlquiler("Calle Triana", "12345678X", TipoArrendador.FISICO, 1000.0, 60, 'A');
+        ContratoAlquiler c = new ContratoAlquiler("Calle Triana", "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(1000.0), 60, 'A');
         LocalDate vtoOriginal = c.getFechaVencimiento();
 
         assertTrue(c.activarProrrogaTacita());
@@ -110,7 +110,7 @@ public class ValidadorLegalComplianceTest {
 
     @Test
     public void testDesistimientoInquilino() {
-        ContratoAlquiler c = new ContratoAlquiler("Calle Triana", "12345678X", TipoArrendador.FISICO, 1000.0, 60, 'A');
+        ContratoAlquiler c = new ContratoAlquiler("Calle Triana", "12345678X", TipoArrendador.FISICO, java.math.BigDecimal.valueOf(1000.0), 60, 'A');
 
         assertFalse(c.estaEnPeriodoDesistimiento()); // Firmado hoy
 
